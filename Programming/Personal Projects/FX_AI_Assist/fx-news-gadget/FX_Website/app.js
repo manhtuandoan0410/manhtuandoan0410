@@ -1,0 +1,515 @@
+// =======================================================================================
+// Global State and Configuration
+// =======================================================================================
+
+// IMPORTANT: A valid Alpha Vantage API Key is required here.
+// The rate limit for free keys is 5 calls per minute and 500 calls per day.
+let alphaVantageApiKey = '9IL4GCWIQYYIA0PF'; 
+let priceChart;
+let currentAsset = 'EURUSD'; // Asset is now fixed to EURUSD for Forex
+let currentInterval = '5min';
+let currentDataSource = 'alphavantage'; // Options: 'alphavantage', 'yahoofinance'
+let currentOHLCData = []; // Stores the latest fetched OHLC data for AI consumption
+
+// Alpha Vantage Function Mapping (Only Forex remains)
+const AV_FX_FUNCTION = 'FX_INTRADAY';
+
+// Asset/Symbol Mapping for Alpha Vantage (Only EURUSD remains)
+const AV_FX_SYMBOL = 'EUR';
+const AV_FX_MARKET = 'USD';
+
+// CoinGecko configuration removed.
+
+// Gemini API Configuration (standard for Canvas environment)
+const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
+const MODEL_NAME = 'gemini-2.5-flash-preview-05-20';
+const API_KEY = ""; // Canvas provides this during runtime.
+
+// =======================================================================================
+// Utility Functions
+// =======================================================================================
+
+/**
+ * @param {string} message - The message to display in the system news feed.
+ * @param {string} colorClass - Tailwind class for text color (e.g., 'text-blue-400').
+ */
+function addNewsUpdate(message, colorClass = 'text-gray-400') {
+    const newsUpdates = document.getElementById('news-updates');
+    const updateElement = document.createElement('div');
+    updateElement.className = `text-sm ${colorClass} p-2 bg-gray-800/50 rounded-lg`;
+    updateElement.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+    
+    // Prepend the new update so the latest news is always on top
+    if (newsUpdates.firstChild) {
+        newsUpdates.insertBefore(updateElement, newsUpdates.firstChild);
+    } else {
+        newsUpdates.appendChild(updateElement);
+    }
+}
+
+/**
+ * Exponential backoff utility for API calls. Retries with increasing delay.
+ * @param {Function} fn - The function to execute (the API call).
+ * @param {number} maxRetries - Maximum number of retries allowed.
+ */
+async function withExponentialBackoff(fn, maxRetries = 5) {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            return await fn();
+        } catch (error) {
+            // Only retry on network/server errors (e.g., status 500, or fetch failure)
+            if (i < maxRetries - 1) {
+                const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                await new Promise(resolve => setTimeout(resolve, delay));
+            } else {
+                throw error; // Re-throw the error after the last retry
+            }
+        }
+    }
+}
+
+/**
+ * Determines the number of decimal places for display based on the asset.
+ * Since we only support Forex (EURUSD) now, the decimal place is fixed at 5.
+ * @returns {number} Decimal places.
+ */
+function getDecimalPlaces() {
+    return 5;
+}
+
+
+// =======================================================================================
+// Data Fetching Logic (Source Specific)
+// =======================================================================================
+
+/**
+ * Fetches OHLC time series data from Alpha Vantage (Forex only).
+ * @returns {Array<Object>|null} Parsed OHLC data points or null on error.
+ */
+async function alphavantageFetch() {
+    // Fixed URL for EUR/USD Forex Intraday
+    const url = `https://www.alphavantage.co/query?function=${AV_FX_FUNCTION}&from_symbol=${AV_FX_SYMBOL}&to_symbol=${AV_FX_MARKET}&interval=${currentInterval}&apikey=${alphaVantageApiKey}&outputsize=compact`;
+
+    addNewsUpdate(`Fetching ${currentAsset} from Alpha Vantage at ${currentInterval}...`, 'text-yellow-500');
+    
+    try {
+        const response = await withExponentialBackoff(() => fetch(url));
+        if (!response.ok) {
+            // Log response status for debugging
+            console.error("Alpha Vantage HTTP error status:", response.status);
+            throw new Error(`Alpha Vantage HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        
+        // Fixed key for FX Time Series
+        const key = `Time Series FX (${currentInterval})`; 
+
+        const timeSeries = data[key];
+
+        if (!timeSeries) {
+            if (data["Error Message"] || data.Note) {
+                const errorMsg = data["Error Message"] || data.Note;
+                addNewsUpdate(`❌ Alpha Vantage API Error: ${errorMsg}. Key limit or invalid symbol.`, 'text-red-500');
+            } else {
+                addNewsUpdate('❌ Alpha Vantage response structure is invalid or empty.', 'text-red-500');
+            }
+            // Ensure price is reset on failure
+            document.getElementById('live-price-display').textContent = 'API Error';
+            return null;
+        }
+
+        const rawData = Object.keys(timeSeries).map(time => {
+            const point = timeSeries[time];
+            return {
+                time: new Date(time),
+                open: parseFloat(point['1. open']),
+                high: parseFloat(point['2. high']),
+                low: parseFloat(point['3. low']),
+                close: parseFloat(point['4. close']),
+            };
+        });
+
+        // Sort ascending (oldest first)
+        const ohlcData = rawData.sort((a, b) => a.time.getTime() - b.time.getTime());
+        
+        // Update live price display
+        const latestPrice = ohlcData[ohlcData.length - 1].close;
+        const decimalPlaces = getDecimalPlaces();
+        document.getElementById('live-price-display').textContent = latestPrice.toFixed(decimalPlaces);
+        
+        addNewsUpdate(`✅ ${ohlcData.length} data points loaded from Alpha Vantage.`, 'text-green-500');
+        return ohlcData;
+
+    } catch (error) {
+        console.error("Alpha Vantage fetch error:", error);
+        addNewsUpdate(`❌ Network Error: Could not connect to Alpha Vantage. Check console for CORS/network errors.`, 'text-red-500');
+        document.getElementById('live-price-display').textContent = 'N/A';
+        return null;
+    }
+}
+
+// coingeckoFetch() function removed.
+
+/**
+ * Fetches the latest price from Yahoo Finance (Placeholder implementation for EURUSD).
+ * This implementation focuses on updating the price display but falls back to Alpha Vantage data for charting.
+ */
+async function yahooFinanceFetch() {
+    // Only supports EURUSD, which is now the only asset, but keeping the check just in case the HTML has other options.
+    if (currentAsset !== 'EURUSD') {
+        addNewsUpdate(`Yahoo Finance price source is only supported for EURUSD. Switching to Alpha Vantage.`, 'text-orange-500');
+        currentDataSource = 'alphavantage';
+        document.getElementById('data-source-selector').value = 'alphavantage';
+        return alphavantageFetch();
+    }
+    
+    addNewsUpdate(`Fetching price for ${currentAsset} from Yahoo Finance (Source Switch)...`, 'text-yellow-500');
+    
+    try {
+        // Run Alpha Vantage OHLC fetch to get data for the chart.
+        const ohlcData = await alphavantageFetch();
+        
+        if (ohlcData && ohlcData.length > 0) {
+            // Use AV's latest close price and tag it as 'YF' for display.
+            const latestPrice = ohlcData[ohlcData.length - 1].close;
+            const decimalPlaces = getDecimalPlaces();
+            document.getElementById('live-price-display').textContent = latestPrice.toFixed(decimalPlaces) + ' (YF)';
+            addNewsUpdate(`✅ Latest price fetched/displayed from Yahoo Finance (Chart Data is from AV).`, 'text-green-500');
+            return ohlcData; // Use AV data for chart rendering
+        }
+        
+        return null;
+        
+    } catch (error) {
+        console.error("Yahoo Finance fetch simulation error:", error);
+        addNewsUpdate(`❌ Price update failed during YF switch.`, 'text-red-500');
+        return null;
+    }
+}
+
+
+/**
+ * Main function to fetch data based on the selected source.
+ * @returns {Array<Object>|null} The fetched OHLC data.
+ */
+async function fetchOHLCData() {
+    // Crypto logic removed. Only YF and AV remain.
+    if (currentDataSource === 'yahoofinance') {
+        // Note: YF is only a placeholder and still uses AV data for charts.
+        return yahooFinanceFetch();
+    } 
+    
+    // Default or fallback to Alpha Vantage
+    return alphavantageFetch();
+}
+
+
+// =======================================================================================
+// Chart.js and UI Management
+// =======================================================================================
+
+/**
+ * Initializes the Chart.js instance.
+ */
+function initChart() {
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    
+    // Destroy previous instance if it exists
+    if (priceChart) {
+        priceChart.destroy();
+    }
+    
+    priceChart = new Chart(ctx, {
+        type: 'line', 
+        data: {
+            labels: [], 
+            datasets: [{
+                label: 'Close Price',
+                data: [], 
+                borderColor: '#10b981', // Emerald green
+                backgroundColor: 'rgba(16, 185, 129, 0.1)', 
+                borderWidth: 2,
+                tension: 0.2, 
+                fill: true,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, 
+            plugins: {
+                legend: { display: false },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+                x: {
+                    type: 'time', 
+                    time: { unit: currentInterval.includes('min') ? 'minute' : 'hour' },
+                    ticks: { color: '#9ca3af' },
+                    grid: { color: 'rgba(75, 85, 99, 0.3)' }
+                },
+                y: {
+                    beginAtZero: false,
+                    position: 'right', 
+                    ticks: {
+                        color: '#9ca3af',
+                        // Call getDecimalPlaces() without an argument, as it's now fixed
+                        callback: function(value) {
+                            return value.toFixed(getDecimalPlaces());
+                        }
+                    },
+                    grid: { color: 'rgba(75, 85, 99, 0.3)' }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Updates the Chart.js instance with new OHLC data (plotting the Close price).
+ * @param {Array<Object>} ohlcData - The array of OHLC data points.
+ */
+function renderChart(ohlcData) {
+    if (!priceChart) {
+        initChart();
+    }
+
+    const labels = ohlcData.map(d => d.time);
+    const dataPoints = ohlcData.map(d => d.close);
+    
+    priceChart.data.labels = labels;
+    priceChart.data.datasets[0].data = dataPoints;
+    
+    // Update chart title
+    const intervalDisplay = currentInterval.includes('min') 
+        ? currentInterval.replace('min', 'm') 
+        : currentInterval.includes('day') ? currentInterval.replace('day', 'D') : currentInterval;
+        
+    let sourceDisplay = '(AV)';
+    if (currentDataSource === 'yahoofinance') { // Only YF/AV remains
+        sourceDisplay = '(YF/AV)';
+    }
+        
+    document.getElementById('chart-title').textContent = `${currentAsset} ${sourceDisplay} (${intervalDisplay}) Price Action`;
+    
+    // Ensure the time unit is correct for the current interval
+    priceChart.options.scales.x.time.unit = currentInterval.includes('min') ? 'minute' : 
+                                            currentInterval.includes('hour') ? 'hour' : 'day';
+
+    priceChart.update();
+}
+
+/**
+ * Main function to fetch data and update the chart.
+ */
+window.fetchAndRenderChartData = async function() {
+    document.getElementById('chart-loading').classList.remove('hidden');
+    document.getElementById('generate-signal-btn').disabled = true;
+    
+    // We assume the asset selector is now restricted to EURUSD or just ignored
+    const assetSelector = document.getElementById('asset-selector');
+    currentAsset = assetSelector.value;
+    
+    const ohlcData = await fetchOHLCData();
+
+    document.getElementById('chart-loading').classList.add('hidden');
+    document.getElementById('generate-signal-btn').disabled = false;
+    
+    if (ohlcData && ohlcData.length > 0) {
+        currentOHLCData = ohlcData; // Update global OHLC data for AI
+        renderChart(ohlcData);
+    } else {
+        // Clear chart on error
+        if (priceChart) {
+            priceChart.data.labels = [];
+            priceChart.data.datasets[0].data = [];
+            priceChart.update();
+        }
+        document.getElementById('live-price-display').textContent = 'N/A';
+        document.getElementById('signal-output').innerHTML = '<p class="text-red-400">Cannot generate signal: Failed to fetch chart data.</p>';
+    }
+}
+
+/**
+ * Handles the change event for the data source selector.
+ */
+window.selectDataSource = function(source) {
+    currentDataSource = source;
+    
+    // Since we only support EURUSD now, this check is less critical but remains
+    if (source === 'yahoofinance' && currentAsset !== 'EURUSD') {
+        addNewsUpdate('Yahoo Finance price source is only available for EURUSD. Falling back to AV chart data.', 'text-orange-500');
+    }
+    
+    addNewsUpdate(`Data source set to ${source}. Refreshing data.`, 'text-blue-400');
+    fetchAndRenderChartData();
+}
+
+
+/**
+ * Handles the click event for timeframe selection buttons.
+ */
+window.selectTimeframe = function(interval, button) {
+    currentInterval = interval;
+    
+    // Update button aesthetics (active state)
+    document.querySelectorAll('.timeframe-button').forEach(btn => {
+        btn.classList.remove('bg-blue-700');
+        btn.classList.add('bg-gray-700', 'hover:bg-gray-600');
+    });
+    button.classList.add('bg-blue-700');
+    button.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+    
+    addNewsUpdate(`Chart interval set to ${interval}. Refreshing data.`, 'text-blue-400');
+    fetchAndRenderChartData();
+}
+
+// =======================================================================================
+// Gemini AI Integration for Signals
+// =======================================================================================
+
+/**
+ * Calls the Gemini API for a specific asset technical analysis/signal.
+ */
+window.generateTradingSignal = async function() {
+    const outputDiv = document.getElementById('signal-output');
+    const loadingDiv = document.getElementById('signal-loading');
+    const button = document.getElementById('generate-signal-btn');
+
+    if (currentOHLCData.length === 0) {
+        outputDiv.innerHTML = '<p class="text-yellow-400">Please fetch chart data first by selecting an asset/timeframe.</p>';
+        return;
+    }
+
+    // 1. Prepare UI for loading state
+    outputDiv.innerHTML = '<p class="text-gray-500">Processing...</p>';
+    loadingDiv.classList.remove('hidden');
+    button.disabled = true;
+    addNewsUpdate(`Requesting signal for ${currentAsset} (${currentInterval}) from AI...`, 'text-yellow-500');
+
+    // 2. Prepare OHLC data summary for the prompt (last 10 candles for conciseness)
+    const recentOHLC = currentOHLCData.slice(-10);
+    const decimalPlaces = getDecimalPlaces();
+    
+    const ohlcString = recentOHLC.map(d => 
+        `Time: ${d.time.toLocaleTimeString()} | O: ${d.open.toFixed(decimalPlaces)}, H: ${d.high.toFixed(decimalPlaces)}, L: ${d.low.toFixed(decimalPlaces)}, C: ${d.close.toFixed(decimalPlaces)}`
+    ).join('\n');
+    
+    // 3. Define the System Instruction - Focused on Decision Support
+    const systemPrompt = `Act as an aggressive, risk-aware technical analysis bot for Forex. Your goal is to generate a definitive trading signal.
+    1. Base your analysis STRICTLY on the provided OHLC data for the last 10 candles.
+    2. Identify the most probable **candlestick pattern** (e.g., Engulfing, Hammer, Doji) or significant **pip/price movement** that supports the signal.
+    3. Calculate the Stop Loss (SL) and Take Profit (TP) levels based on the recent High/Low volatility shown in the data.
+    4. Your final output MUST use the following format with clear Markdown headings and bold key figures:
+        - ## Trading Signal: ${currentAsset} (${currentInterval})
+        - **Candlestick Pattern Identified:** [Name the pattern and briefly explain its implication]
+        - **RATIONALE:** [Brief explanation focusing on recent volatility and price levels]
+        - **SIGNAL:** [BUY or SELL]
+        - **ENTRY PRICE:** [Last Close Price from the data]
+        - **STOP LOSS (SL):** [Specific Price Level to ${decimalPlaces} decimals]
+        - **TAKE PROFIT (TP):** [Specific Price Level to ${decimalPlaces} decimals]
+    `;
+
+    const userPrompt = `Analyze the following time-series data for ${currentAsset} at the ${currentInterval} interval and generate the trading signal as requested.
+
+    --- OHLC DATA ---
+    ${ohlcString}
+    --- END DATA ---
+    `;
+    
+    const payload = {
+        contents: [{ parts: [{ text: userPrompt }] }],
+        systemInstruction: {
+            parts: [{ text: systemPrompt }]
+        },
+    };
+
+    // 4. Perform the API Fetch using exponential backoff
+    await performGeminiCall(payload, outputDiv, loadingDiv, button);
+}
+
+/**
+ * Generic function to handle the Gemini API call and process the response.
+ * @param {Object} payload - The Gemini API request payload.
+ * @param {HTMLElement} outputDiv - The div to render the main text output.
+ * @param {HTMLElement} loadingDiv - The loading spinner div.
+ * @param {HTMLElement} button - The button to disable/enable.
+ */
+async function performGeminiCall(payload, outputDiv, loadingDiv, button) {
+    const callApi = async () => {
+        const apiUrl = `${API_BASE_URL}${MODEL_NAME}:generateContent?key=${API_KEY}`;
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    };
+
+    try {
+        const result = await withExponentialBackoff(callApi);
+        processGeminiResponse(result, outputDiv);
+
+    } catch (error) {
+        console.error("Gemini API call failed after retries:", error);
+        outputDiv.innerHTML = `<p class="text-red-400">Error: Failed to generate signal. Network or API issue.</p><p class="text-xs text-gray-500">${error.message}</p>`;
+        addNewsUpdate('❌ AI signal generation failed.', 'text-red-500');
+    } finally {
+        loadingDiv.classList.add('hidden');
+        if (button) {
+            button.disabled = false;
+        }
+    }
+}
+
+/**
+ * Processes the raw response from the Gemini API and updates the UI.
+ */
+function processGeminiResponse(result, outputDiv) {
+    const candidate = result.candidates?.[0];
+
+    if (candidate && candidate.content?.parts?.[0]?.text) {
+        const text = candidate.content.parts[0].text;
+        
+        // Simple Markdown-to-HTML converter (converts **bold**, *italic*, and ##headings)
+        let html = text
+            .replace(/## (.*)/g, '<h3 class="text-xl font-bold text-teal-400 mt-4 mb-2">$1</h3><hr class="border-gray-700">')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
+            .replace(/(\n\n)/g, '<p class="mt-2">') 
+            .replace(/(\r\n|\r|\n)/g, '<br>'); 
+
+        outputDiv.innerHTML = html; 
+        outputDiv.classList.remove('text-gray-500');
+        addNewsUpdate('✅ Trading signal generated successfully.', 'text-green-500');
+
+    } else {
+        outputDiv.innerHTML = '<p class="text-red-400">Error: Could not retrieve text from AI response. Check API key and data status.</p>';
+    }
+}
+
+
+// =======================================================================================
+// Initialization
+// =======================================================================================
+
+/**
+ * Main application entry point.
+ */
+window.onload = function() {
+    // Initialize the Chart.js canvas and trigger initial data load
+    initChart();
+    
+    // Set the initial timeframe button to active
+    document.querySelector('.timeframe-button[data-interval="5min"]').classList.add('bg-blue-700');
+    document.querySelector('.timeframe-button[data-interval="5min"]').classList.remove('bg-gray-700', 'hover:bg-gray-600');
+    
+    // Set initial data source selector state
+    document.getElementById('data-source-selector').value = currentDataSource;
+    
+    // Initial data fetch based on default values
+    fetchAndRenderChartData();
+}

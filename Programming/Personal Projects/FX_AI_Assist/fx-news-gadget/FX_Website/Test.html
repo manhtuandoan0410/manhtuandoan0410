@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EUR/USD Forex Trading Signal Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js and Day.js for time scale handling -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0d1117 0%, #1a1f2e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .card {
+            background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            max-width: 1200px;
+            width: 100%;
+        }
+        .pattern-box {
+            background: linear-gradient(135deg, #1f2937 0%, #171c26 100%);
+            border-left: 4px solid #34d399; /* Emerald 400 */
+        }
+    </style>
+</head>
+<body class="text-white">
+
+    <div class="card p-6 rounded-2xl border border-gray-700">
+        <h1 class="text-3xl font-extrabold text-teal-400 mb-6 border-b border-gray-700 pb-3">
+            EUR/USD AI Trading Signal Generator
+        </h1>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Trading Controls and Live Data (Left Column) -->
+            <div class="lg:col-span-1 space-y-6">
+
+                <!-- Live Price Display -->
+                <div class="bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-700">
+                    <div class="text-sm font-medium text-gray-400">Current Price</div>
+                    <div id="live-price-display" class="text-4xl font-mono font-bold text-green-400 mt-1 transition duration-300">
+                        Loading...
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Simulated Yahoo Finance Data</p>
+                </div>
+
+                <!-- Asset and Data Source Controls -->
+                <div class="bg-gray-800 p-4 rounded-xl shadow-lg space-y-4 border border-gray-700">
+                    <h2 class="text-lg font-semibold text-gray-200">Configuration</h2>
+                    
+                    <!-- Fixed Asset Display (Replaced Selector) -->
+                    <div class="flex flex-col space-y-2">
+                        <label class="text-xs text-gray-400">Trading Asset</label>
+                        <div class="py-2 px-3 bg-gray-700 text-white rounded-lg font-semibold border border-gray-600">
+                            EUR/USD (Forex)
+                        </div>
+                    </div>
+
+                    <!-- Data Source Selector (Updated options and order) -->
+                    <div class="flex flex-col space-y-2">
+                        <label for="data-source-selector" class="text-xs text-gray-400">Data Source</label>
+                        <select id="data-source-selector" onchange="selectDataSource(this.value)" class="bg-gray-700 text-white rounded-lg p-2 border border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="yahoofinance">Yahoo Finance (Simulated/Guaranteed)</option>
+                        </select>
+                    </div>
+
+                    <!-- Timeframe Selector -->
+                    <div class="space-y-2">
+                        <label class="text-xs text-gray-400">Chart Interval</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="selectTimeframe('1min', this)" data-interval="1min" class="timeframe-button bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg transition duration-150">1m</button>
+                            <button onclick="selectTimeframe('5min', this)" data-interval="5min" class="timeframe-button bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg transition duration-150">5m</button>
+                            <button onclick="selectTimeframe('15min', this)" data-interval="15min" class="timeframe-button bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg transition duration-150">15m</button>
+                            <button onclick="selectTimeframe('60min', this)" data-interval="60min" class="timeframe-button bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg transition duration-150">1h</button>
+                            <button onclick="selectTimeframe('1day', this)" data-interval="1day" class="timeframe-button bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg transition duration-150">1D</button>
+                            <button onclick="selectTimeframe('7day', this)" data-interval="7day" class="timeframe-button bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg transition duration-150">7D</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Signal Generation -->
+                <button id="generate-signal-btn" onclick="generateTradingSignal()" 
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg transition duration-150 ease-in-out transform hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed">
+                    Generate AI Signal
+                </button>
+
+                <!-- System News Feed -->
+                <div class="bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-700">
+                    <h2 class="text-lg font-semibold text-gray-200 mb-2">System News Feed</h2>
+                    <div id="news-updates" class="space-y-2 max-h-40 overflow-y-auto">
+                        <!-- News updates will be appended here -->
+                        <div class="text-sm text-gray-400 p-2 bg-gray-800/50 rounded-lg">[INFO] Application initialized.</div>
+                    </div>
+                </div>
+                
+            </div>
+
+            <!-- Chart and Signal Output (Right Column) -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Chart Container -->
+                <div class="bg-gray-800 p-4 rounded-xl shadow-lg h-96 border border-gray-700">
+                    <h2 id="chart-title" class="text-lg font-semibold text-gray-200 mb-2">EUR/USD (Simulated YF) (5m) Price Action</h2>
+                    <div class="relative h-full">
+                        <canvas id="priceChart"></canvas>
+                        <div id="chart-loading" class="absolute inset-0 bg-gray-900/70 flex items-center justify-center hidden">
+                            <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-teal-400 font-medium">Loading data...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Signal Output -->
+                <div class="bg-gray-800 p-4 rounded-xl shadow-lg pattern-box min-h-[180px]">
+                    <h2 class="text-xl font-bold text-teal-400 mb-3">AI Trading Signal</h2>
+                    <div id="signal-loading" class="hidden flex items-center space-x-2 text-yellow-400 mb-2">
+                        <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Analyzing data and generating signal...</span>
+                    </div>
+                    <div id="signal-output" class="text-gray-300 space-y-2">
+                        <p>Click "Generate AI Signal" after the chart data loads to receive an aggressive Forex trading recommendation, complete with an Entry Price, Stop Loss (SL), and Take Profit (TP).</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic (from app.js) -->
+    <script>
+    // =======================================================================================
+    // Global State and Configuration
+    // =======================================================================================
+
+    // Note: Direct fetching from providers like Yahoo Finance is often blocked by CORS.
+    // To ensure guaranteed functionality and a working chart, we use embedded mock data.
+    let priceChart;
+    let currentAsset = 'EURUSD';
+    let currentInterval = '5min';
+    let currentDataSource = 'yahoofinance'; 
+    let currentOHLCData = []; // Stores the latest fetched OHLC data for AI consumption
+
+    // Gemini API Configuration (standard for Canvas environment)
+    const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
+    const MODEL_NAME = 'gemini-2.5-flash-preview-05-20';
+    const API_KEY = ""; // Canvas provides this during runtime.
+
+    // =======================================================================================
+    // Mock Data Generation (Simulating a reliable Yahoo Finance source)
+    // =======================================================================================
+
+    /**
+     * Generates a realistic array of OHLC (Open, High, Low, Close) data for EUR/USD.
+     * @returns {Array<Object>} Simulated OHLC data.
+     */
+    function generateMockOHLCData() {
+        const MOCK_DATA_POINTS = 120; // Generate 120 candles
+        const data = [];
+        let price = 1.08500; // Starting price
+        const timeNow = new Date().getTime();
+        const intervalMs = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+        for (let i = MOCK_DATA_POINTS; i >= 1; i--) {
+            // Calculate time in the past
+            const time = new Date(timeNow - (i * intervalMs));
+            
+            // Introduce random movement and volatility
+            const volatility = 0.00025; 
+            const change = (Math.random() - 0.5) * volatility;
+            
+            const open = price;
+            const close = price + change;
+            
+            // Generate realistic high and low
+            const high = Math.max(open, close) + Math.random() * (volatility / 5);
+            const low = Math.min(open, close) - Math.random() * (volatility / 5);
+
+            price = close; 
+
+            data.push({
+                time: time,
+                open: parseFloat(open.toFixed(5)),
+                high: parseFloat(high.toFixed(5)),
+                low: parseFloat(low.toFixed(5)),
+                close: parseFloat(close.toFixed(5)),
+            });
+        }
+        return data;
+    }
+    const FULL_MOCK_OHLC_DATA = generateMockOHLCData();
+    
+    // =======================================================================================
+    // Utility Functions
+    // =======================================================================================
+
+    /**
+     * @param {string} message - The message to display in the system news feed.
+     * @param {string} colorClass - Tailwind class for text color (e.g., 'text-blue-400').
+     */
+    function addNewsUpdate(message, colorClass = 'text-gray-400') {
+        const newsUpdates = document.getElementById('news-updates');
+        const updateElement = document.createElement('div');
+        updateElement.className = `text-sm ${colorClass} p-2 bg-gray-800/50 rounded-lg`;
+        updateElement.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+        
+        if (newsUpdates.firstChild) {
+            newsUpdates.insertBefore(updateElement, newsUpdates.firstChild);
+        } else {
+            newsUpdates.appendChild(updateElement);
+        }
+    }
+
+    /**
+     * Exponential backoff utility for API calls.
+     */
+    async function withExponentialBackoff(fn, maxRetries = 5) {
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                return await fn();
+            } catch (error) {
+                if (i < maxRetries - 1) {
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                } else {
+                    throw error; 
+                }
+            }
+        }
+    }
+
+    /**
+     * Determines the number of decimal places for display.
+     */
+    function getDecimalPlaces() {
+        return 5;
+    }
+
+
+    // =======================================================================================
+    // Data Fetching Logic (Using Mock Data)
+    // =======================================================================================
+
+    /**
+     * Simulates fetching OHLC time series data from Yahoo Finance.
+     * In a real app, this would be a fetch() call to a server-side proxy.
+     * Here, it filters the mock data based on the requested interval.
+     * @returns {Array<Object>|null} Parsed OHLC data points.
+     */
+    async function yahooFinanceFetch() {
+        const intervalMap = {
+            '1min': 1, // 100% of data points
+            '5min': 1, // 100% of data points
+            '15min': 3, // Use every 3rd point to simulate 15m from 5m data
+            '60min': 12, // Use every 12th point to simulate 1h from 5m data
+            '1day': 24, // Use every 24th point for daily simulation (less accurate but works)
+            '7day': 84, // Use every 84th point for 7-day simulation
+        };
+        
+        // Default to showing all 5min points if interval is small or unknown
+        const factor = intervalMap[currentInterval] || 1;
+        
+        // Filter the mock data
+        const ohlcData = FULL_MOCK_OHLC_DATA.filter((_, index) => index % factor === 0);
+
+        if (ohlcData.length === 0) {
+            document.getElementById('live-price-display').textContent = 'N/A';
+            addNewsUpdate(`❌ Mock Data Error: Could not generate data for interval ${currentInterval}.`, 'text-red-500');
+            return null;
+        }
+            
+        // Update live price display
+        const latestPrice = ohlcData[ohlcData.length - 1].close;
+        const decimalPlaces = getDecimalPlaces();
+        document.getElementById('live-price-display').textContent = latestPrice.toFixed(decimalPlaces) + ' (Simulated)';
+        
+        addNewsUpdate(`✅ ${ohlcData.length} data points loaded from Simulated Yahoo Finance.`, 'text-green-500');
+        return ohlcData;
+    }
+
+
+    /**
+     * Main function to fetch data based on the selected source.
+     * @returns {Array<Object>|null} The fetched OHLC data.
+     */
+    async function fetchOHLCData() {
+        // Now only uses the guaranteed mock data source
+        return yahooFinanceFetch();
+    }
+
+
+    // =======================================================================================
+    // Chart.js and UI Management
+    // =======================================================================================
+
+    /**
+     * Initializes the Chart.js instance.
+     */
+    function initChart() {
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        
+        if (priceChart) {
+            priceChart.destroy();
+        }
+        
+        priceChart = new Chart(ctx, {
+            type: 'line', 
+            data: {
+                labels: [], 
+                datasets: [{
+                    label: 'Close Price',
+                    data: [], 
+                    borderColor: '#10b981', // Emerald green
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)', 
+                    borderWidth: 2,
+                    tension: 0.2, 
+                    fill: true,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, 
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    x: {
+                        type: 'time', 
+                        // Determine time unit based on interval
+                        time: { 
+                            unit: currentInterval.includes('min') ? 'minute' : currentInterval.includes('day') ? 'day' : 'hour' 
+                        },
+                        ticks: { color: '#9ca3af' },
+                        grid: { color: 'rgba(75, 85, 99, 0.3)' }
+                    },
+                    y: {
+                        beginAtZero: false,
+                        position: 'right', 
+                        ticks: {
+                            color: '#9ca3af',
+                            callback: function(value) {
+                                return value.toFixed(getDecimalPlaces());
+                            }
+                        },
+                        grid: { color: 'rgba(75, 85, 99, 0.3)' }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Updates the Chart.js instance with new OHLC data (plotting the Close price).
+     * @param {Array<Object>} ohlcData - The array of OHLC data points.
+     */
+    function renderChart(ohlcData) {
+        if (!priceChart) {
+            initChart();
+        }
+
+        const labels = ohlcData.map(d => d.time);
+        const dataPoints = ohlcData.map(d => d.close);
+        
+        priceChart.data.labels = labels;
+        priceChart.data.datasets[0].data = dataPoints;
+        
+        // Update chart title
+        const intervalDisplay = currentInterval.includes('min') 
+            ? currentInterval.replace('min', 'm') 
+            : currentInterval.includes('day') ? currentInterval.replace('day', 'D') : currentInterval;
+            
+        const sourceDisplay = '(Simulated YF)';
+            
+        document.getElementById('chart-title').textContent = `${currentAsset} ${sourceDisplay} (${intervalDisplay}) Price Action`;
+        
+        // Ensure the time unit is correct for the current interval
+        priceChart.options.scales.x.time.unit = currentInterval.includes('min') ? 'minute' : 
+                                                currentInterval.includes('60min') ? 'hour' : 'day';
+
+        priceChart.update();
+    }
+
+    /**
+     * Main function to fetch data and update the chart.
+     */
+    window.fetchAndRenderChartData = async function() {
+        document.getElementById('chart-loading').classList.remove('hidden');
+        document.getElementById('generate-signal-btn').disabled = true;
+        
+        const ohlcData = await fetchOHLCData();
+
+        document.getElementById('chart-loading').classList.add('hidden');
+        document.getElementById('generate-signal-btn').disabled = false;
+        
+        if (ohlcData && ohlcData.length > 0) {
+            currentOHLCData = ohlcData; // Update global OHLC data for AI
+            renderChart(ohlcData);
+        } else {
+            // Clear chart on error
+            if (priceChart) {
+                priceChart.data.labels = [];
+                priceChart.data.datasets[0].data = [];
+                priceChart.update();
+            }
+            document.getElementById('live-price-display').textContent = 'N/A';
+            document.getElementById('signal-output').innerHTML = '<p class="text-red-400">Cannot generate signal: Failed to fetch chart data.</p>';
+        }
+    }
+
+    /**
+     * Handles the change event for the data source selector. (Only one option remains now)
+     */
+    window.selectDataSource = function(source) {
+        currentDataSource = source;
+        addNewsUpdate(`Data source set to ${source}. Refreshing data.`, 'text-blue-400');
+        fetchAndRenderChartData();
+    }
+
+
+    /**
+     * Handles the click event for timeframe selection buttons.
+     */
+    window.selectTimeframe = function(interval, button) {
+        currentInterval = interval;
+        
+        // Update button aesthetics (active state)
+        document.querySelectorAll('.timeframe-button').forEach(btn => {
+            btn.classList.remove('bg-blue-700');
+            btn.classList.add('bg-gray-700', 'hover:bg-gray-600');
+        });
+        button.classList.add('bg-blue-700');
+        button.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+        
+        addNewsUpdate(`Chart interval set to ${interval}. Refreshing data.`, 'text-blue-400');
+        fetchAndRenderChartData();
+    }
+
+    // =======================================================================================
+    // Gemini AI Integration for Signals
+    // =======================================================================================
+
+    /**
+     * Calls the Gemini API for a specific asset technical analysis/signal.
+     */
+    window.generateTradingSignal = async function() {
+        const outputDiv = document.getElementById('signal-output');
+        const loadingDiv = document.getElementById('signal-loading');
+        const button = document.getElementById('generate-signal-btn');
+
+        if (currentOHLCData.length === 0) {
+            outputDiv.innerHTML = '<p class="text-yellow-400">Please fetch chart data first by selecting an asset/timeframe.</p>';
+            return;
+        }
+
+        // 1. Prepare UI for loading state
+        outputDiv.innerHTML = '<p class="text-gray-500">Processing...</p>';
+        loadingDiv.classList.remove('hidden');
+        button.disabled = true;
+        addNewsUpdate(`Requesting signal for ${currentAsset} (${currentInterval}) from AI...`, 'text-yellow-500');
+
+        // 2. Prepare OHLC data summary for the prompt (last 10 candles for conciseness)
+        const recentOHLC = currentOHLCData.slice(-10);
+        const decimalPlaces = getDecimalPlaces();
+        
+        const ohlcString = recentOHLC.map(d => 
+            `Time: ${d.time.toLocaleTimeString()} | O: ${d.open.toFixed(decimalPlaces)}, H: ${d.high.toFixed(decimalPlaces)}, L: ${d.low.toFixed(decimalPlaces)}, C: ${d.close.toFixed(decimalPlaces)}`
+        ).join('\n');
+        
+        // 3. Define the System Instruction - Focused on Decision Support
+        const systemPrompt = `Act as an aggressive, risk-aware technical analysis bot for Forex. Your goal is to generate a definitive trading signal.
+        1. Base your analysis STRICTLY on the provided OHLC data for the last 10 candles.
+        2. Identify the most probable **candlestick pattern** (e.g., Engulfing, Hammer, Doji) or significant **pip/price movement** that supports the signal.
+        3. Calculate the Stop Loss (SL) and Take Profit (TP) levels based on the recent High/Low volatility shown in the data.
+        4. Your final output MUST use the following format with clear Markdown headings and bold key figures:
+            - ## Trading Signal: ${currentAsset} (${currentInterval})
+            - **Candlestick Pattern Identified:** [Name the pattern and briefly explain its implication]
+            - **RATIONALE:** [Brief explanation focusing on recent volatility and price levels]
+            - **SIGNAL:** [BUY or SELL]
+            - **ENTRY PRICE:** [Last Close Price from the data]
+            - **STOP LOSS (SL):** [Specific Price Level to ${decimalPlaces} decimals]
+            - **TAKE PROFIT (TP):** [Specific Price Level to ${decimalPlaces} decimals]
+        `;
+
+        const userPrompt = `Analyze the following time-series data for ${currentAsset} at the ${currentInterval} interval and generate the trading signal as requested.
+
+        --- OHLC DATA ---
+        ${ohlcString}
+        --- END DATA ---
+        `;
+        
+        const payload = {
+            contents: [{ parts: [{ text: userPrompt }] }],
+            systemInstruction: {
+                parts: [{ text: systemPrompt }]
+            },
+        };
+
+        // 4. Perform the API Fetch using exponential backoff
+        await performGeminiCall(payload, outputDiv, loadingDiv, button);
+    }
+
+    /**
+     * Generic function to handle the Gemini API call and process the response.
+     */
+    async function performGeminiCall(payload, outputDiv, loadingDiv, button) {
+        const callApi = async () => {
+            const apiUrl = `${API_BASE_URL}${MODEL_NAME}:generateContent?key=${API_KEY}`;
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        };
+
+        try {
+            const result = await withExponentialBackoff(callApi);
+            processGeminiResponse(result, outputDiv);
+
+        } catch (error) {
+            console.error("Gemini API call failed after retries:", error);
+            outputDiv.innerHTML = `<p class="text-red-400">Error: Failed to generate signal. Network or API issue.</p><p class="text-xs text-gray-500">${error.message}</p>`;
+            addNewsUpdate('❌ AI signal generation failed.', 'text-red-500');
+        } finally {
+            loadingDiv.classList.add('hidden');
+            if (button) {
+                button.disabled = false;
+            }
+        }
+    }
+
+    /**
+     * Processes the raw response from the Gemini API and updates the UI.
+     */
+    function processGeminiResponse(result, outputDiv) {
+        const candidate = result.candidates?.[0];
+
+        if (candidate && candidate.content?.parts?.[0]?.text) {
+            const text = candidate.content.parts[0].text;
+            
+            // Simple Markdown-to-HTML converter 
+            let html = text
+                .replace(/## (.*)/g, '<h3 class="text-xl font-bold text-teal-400 mt-4 mb-2">$1</h3><hr class="border-gray-700">')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
+                .replace(/(\n\n)/g, '<p class="mt-2">') 
+                .replace(/(\r\n|\r|\n)/g, '<br>'); 
+
+            outputDiv.innerHTML = html; 
+            outputDiv.classList.remove('text-gray-500');
+            addNewsUpdate('✅ Trading signal generated successfully.', 'text-green-500');
+
+        } else {
+            outputDiv.innerHTML = '<p class="text-red-400">Error: Could not retrieve text from AI response. Check API key and data status.</p>';
+        }
+    }
+
+
+    // =======================================================================================
+    // Initialization
+    // =======================================================================================
+
+    /**
+     * Main application entry point.
+     */
+    window.onload = function() {
+        // Initialize the Chart.js canvas and trigger initial data load
+        initChart();
+        
+        // Set the initial timeframe button to active
+        document.querySelector('.timeframe-button[data-interval="5min"]').classList.add('bg-blue-700');
+        document.querySelector('.timeframe-button[data-interval="5min"]').classList.remove('bg-gray-700', 'hover:bg-gray-600');
+        
+        // Set initial data source selector state
+        document.getElementById('data-source-selector').value = currentDataSource; 
+        
+        // Initial data fetch based on default values
+        fetchAndRenderChartData();
+    }
+    </script>
+</body>
+</html>

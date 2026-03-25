@@ -1,0 +1,177 @@
+<!doctype html>
+<!--
+  Single-file version: all pages included as sections.
+  Navigation is implemented with simple JS that toggles 'hidden' classes.
+  This is great for learning how SPA-like behavior works without frameworks.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ares A-1 — Single File Learning Version</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .bg-ares-dark { background-color: #0b1220; }
+    .bg-ares-mid  { background-color: #111827; }
+    .text-ares-light { color: #D1D5DB; }
+    .text-ares-bright { color: #E5E7EB; }
+    .fade-in { animation: fadeIn 360ms ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: translateY(0) } }
+    .hidden-section { display: none; }
+  </style>
+</head>
+<body class="bg-ares-dark text-ares-light min-h-screen">
+  <div class="max-w-5xl mx-auto p-6">
+    <header class="mb-6 flex items-center gap-4">
+      <img src="assets/Ares_A-1.png" alt="Ares" class="w-14 rounded-md shadow" />
+      <div>
+        <h1 class="text-2xl font-bold text-ares-bright">Project Ares A-1 — Single File Version</h1>
+        <p class="text-xs text-gray-400">Learn by reading the comments and toggling sections.</p>
+      </div>
+    </header>
+
+    <!-- Nav: buttons trigger JS to show/hide the page sections -->
+    <div class="flex gap-2 mb-4">
+      <button data-target="home" class="nav-btn px-3 py-2 rounded bg-ares-mid">Home</button>
+      <button data-target="structure" class="nav-btn px-3 py-2 rounded">Structure</button>
+      <button data-target="systems" class="nav-btn px-3 py-2 rounded">Systems</button>
+      <button data-target="others" class="nav-btn px-3 py-2 rounded">Others</button>
+      <button data-target="about" class="nav-btn px-3 py-2 rounded">About</button>
+    </div>
+
+    <!-- PAGE: Home -->
+    <section id="home" class="page-section fade-in">
+
+<!-- Detailed intro using Cyborg.docx content for context and accuracy. -->
+<article class="space-y-4">
+  <p class="text-lg">Welcome to the technical readout for <strong>Project Ares A-1</strong>. This site documents a bio-cybernetic guardian—an integrated human brain (as the ethical core) fused with a reinforced cybernetic chassis. The design emphasizes redundancy, safety, and survivability while pushing near-future technologies (BCI, DEAs, SSBs).</p>
+
+  <section class="bg-ares-mid p-4 rounded shadow">
+    <h3 class="font-semibold text-ares-bright">Executive Summary</h3>
+    <ul class="list-disc list-inside mt-2 text-sm text-gray-300">
+      <li><strong>Mandate:</strong> Protect the designer's family and maintain continuity of care via Neural Backup & Restoration Protocols (NBRP).</li>
+      <li><strong>Composition:</strong> 2-meter, 450 kg hybrid construct combining graphene/titanium composites, dielectric elastomer actuators (DEAs), and distributed solid-state batteries (BESS).</li>
+      <li><strong>Control:</strong> Prometheus COM with Brain-Computer Interface (BCI) for instant intent translation; ethical constraints enforced by an Ethical Constraint Layer (ECL).</li>
+      <li><strong>Resilience:</strong> Internal Repair Module (IRM) housing Cyber-Bots for autonomous additive repairs; multi-layer smart armor with STF and self-healing polymers.</li>
+    </ul>
+    <p class="text-xs text-gray-400 mt-2">Source: expanded notes from the project's concept document (see Cyborg.docx in the assets). fileciteturn0file1</p>
+  </section>
+</article>
+
+</section>
+
+    <!-- PAGE: Structure -->
+    <section id="structure" class="page-section hidden-section">
+
+<article class="space-y-4">
+  <section class="bg-ares-mid p-4 rounded shadow">
+    <h3 class="font-semibold text-ares-bright">Chassis & Skeleton</h3>
+    <p class="text-sm text-gray-300 mt-2">The exoskeleton uses a titanium/graphene composite—lightweight and high-strength—to bear loads and distribute forces created by the artificial muscles. Internal fiber-optic sensing monitors structural health in real-time.</p>
+    <p class="text-xs text-gray-400 mt-2">Details and material rationale from Cyborg.docx. fileciteturn0file19</p>
+  </section>
+
+  <section class="bg-ares-mid p-4 rounded shadow">
+    <h3 class="font-semibold text-ares-bright">Muscles / Actuation</h3>
+    <p class="text-sm text-gray-300 mt-2">Graphene-Enhanced Dielectric Elastomer Actuators (G-DEA) behave like biological muscle—large strain, fast response. Electrodes use Graphene/CNT composites to remain flexible and conductive under high voltage. Tendons are Graphene-CNT composite fiber for extreme tensile strength.</p>
+    <ul class="list-disc list-inside text-xs text-gray-400 mt-2">
+      <li>DEAs: compliant capacitors that expand/contract under voltage (high speed, high force). fileciteturn0file1</li>
+      <li>Electrodes and tendons: CNT/graphene hybrids for conductivity and fracture toughness. fileciteturn0file0</li>
+    </ul>
+  </section>
+
+  <section class="bg-ares-mid p-4 rounded shadow">
+    <h3 class="font-semibold text-ares-bright">Power / BESS (Bio-Energetic Spine System)</h3>
+    <p class="text-sm text-gray-300 mt-2">The BESS distributes flexible solid-state battery cells along the spine and tail, integrates thermoelectric generators (TEGs) to recycle waste heat, and adds kinetic/solar harvesting. This design balances weight and provides redundancy if any one segment is damaged. fileciteturn0file2turn0file8</p>
+    <p class="text-xs text-gray-400 mt-2">Comment: solid-state batteries and TEGs are current research areas—this is an integration concept rather than a single off-the-shelf product. fileciteturn0file14</p>
+  </section>
+</article>
+
+</section>
+
+    <!-- PAGE: Systems -->
+    <section id="systems" class="page-section hidden-section">
+
+<article class="space-y-4">
+  <section class="bg-ares-mid p-4 rounded shadow">
+    <h3 class="font-semibold text-ares-bright">Offense</h3>
+    <p class="text-sm text-gray-300 mt-2">Primary melee: Plasma Blade—miniature plasma containment emitter in a hilt. Designed for burst usage due to high instantaneous energy draw; ideal for breaching and anti-armor cutting. fileciteturn0file16</p>
+    <p class="text-xs text-gray-400 mt-2">Implementation note: optimize power routing to the BESS for instantaneous bursts and aggressive cooling during use. fileciteturn0file11</p>
+  </section>
+
+  <section class="bg-ares-mid p-4 rounded shadow">
+    <h3 class="font-semibold text-ares-bright">Defense</h3>
+    <p class="text-sm text-gray-300 mt-2">Projected Magnetic/Plasma Shield: an EM coil array paired with rapid gas-ionization to create a short-duration plasma/magnetic field to deflect projectiles and absorb lasers. Activates only when predictive sensors indicate imminent impact to preserve energy. fileciteturn0file16</p>
+  </section>
+
+  <section class="bg-ares-mid p-4 rounded shadow">
+    <h3 class="font-semibold text-ares-bright">Support / Life Support / Repair</h3>
+    <p class="text-sm text-gray-300 mt-2">Internal Repair Module (IRM) stores a swarm of Cyber-Bots (Nano-Welders) and materials (graphene paste, metallic powder, polymer resin). On damage detection, the IRM deploys a targeted swarm to perform additive 3D repairs guided by real-time structural simulation. fileciteturn0file13turn0file18</p>
+    <p class="text-xs text-gray-400 mt-2">Biological Life Support System (BLSS) maintains the preserved brain—temperature regulation, nutrient flow, and NBRP sync for backups. fileciteturn0file1</p>
+  </section>
+</article>
+
+</section>
+
+    <!-- PAGE: Others -->
+    <section id="others" class="page-section hidden-section">
+
+<article class="space-y-4">
+  <section class="bg-ares-mid p-4 rounded shadow">
+    <h3 class="font-semibold text-ares-bright">AI, COM & Ethics</h3>
+    <p class="text-sm text-gray-300 mt-2">Prometheus COM (Cognitive Overmatch Module) pairs with a Brain-Computer Interface for intent translation. The system enforces an Ethical Constraint Layer (ECL) and Agency / Kill-switch protocols to maintain human oversight or remote strategic command as required. fileciteturn0file3turn0file12</p>
+  </section>
+
+  <section class="bg-ares-mid p-4 rounded shadow">
+    <h3 class="font-semibold text-ares-bright">Swarm Robotics & T-1000 Notes</h3>
+    <p class="text-sm text-gray-300 mt-2">Liquid-metal T-1000 is fictional; practical reconfiguration uses modular swarm robotics and hybrid magnetic/mechanical connectors. Self-assembly and self-repair research informs the IRM and swarm behavior. fileciteturn0file18</p>
+  </section>
+</article>
+
+</section>
+
+    <!-- PAGE: About -->
+    <section id="about" class="page-section hidden-section">
+
+<article class="space-y-4">
+  <section class="bg-ares-mid p-4 rounded shadow">
+    <h3 class="font-semibold text-ares-bright">About the Creator</h3>
+    <p class="text-sm text-gray-300 mt-2">Hi — you're the creator of this project. This page is a placeholder bio; replace it to personalize the site. Suggested fields: background (engineering / art / fiction), goals for Ares, and contact or GitHub link.</p>
+    <p class="text-xs text-gray-400 mt-2">Reference design notes included from Cyborg.docx for authenticity. fileciteturn0file19</p>
+  </section>
+</article>
+
+</section>
+
+    <footer class="mt-8 text-xs text-gray-500">Single-file version: open the HTML in a browser and click the nav buttons. Comments inside explain the JS.</footer>
+  </div>
+
+  <script>
+    // Simple JS used for the single-file version.
+    // Learning notes:
+    // - We use data-target attributes to map buttons to sections by id.
+    // - ClassList toggles show/hide the content. No frameworks required.
+    const buttons = document.querySelectorAll('.nav-btn');
+    function show(targetId) {
+      // Hide all sections
+      document.querySelectorAll('.page-section').forEach(s => {
+        s.classList.add('hidden-section');
+      });
+      // Show the selected one
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.classList.remove('hidden-section');
+        el.classList.add('fade-in');
+      }
+      // update active button styling (simple)
+      buttons.forEach(b=> b.classList.remove('bg-ares-mid'));
+      document.querySelector('[data-target=\"'+targetId+'\"]')?.classList.add('bg-ares-mid');
+    }
+    // attach handlers
+    buttons.forEach(btn => {
+      btn.addEventListener('click', ()=> show(btn.dataset.target));
+    });
+    // default page on load
+    show('home');
+  </script>
+</body>
+</html>

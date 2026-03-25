@@ -1,0 +1,38 @@
+package basicCalculations;
+
+import java.util.Scanner;
+
+public class DivisionAndRemainder {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		Scanner input = new Scanner(System.in);
+		
+		System.out.print("Enter x: ");
+		int x = Integer.parseInt(input.nextLine().trim());
+		
+		System.out.print("Enter y: ");
+		int y = Integer.parseInt(input.nextLine().trim());
+		
+		int remX = x % y;
+		int remY = y % x;
+						
+		System.out.println();
+		
+		if (remX == 0) {
+			System.out.println(x + " is even");
+		} else {
+			System.out.println(x + " is odd");
+		}
+		
+		if (remY == 0) {
+			System.out.println(y + " is even");
+		} else {
+			System.out.println(y + " is odd");
+		}
+		
+		System.out.println("The remainder of " + x + " / " + y + " is " + remX);
+		System.out.println("The remainder of " + y + " / " + x + " is " + remY);
+	}
+
+}

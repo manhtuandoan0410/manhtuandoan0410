@@ -1,0 +1,21 @@
+package basicCalculations;
+
+import java.util.Scanner;
+
+public class DivisionAndRemainder {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		Scanner input = new Scanner(System.in);
+		
+		System.out.print("Enter x: ");
+		int x = Integer.parseInt(input.nextLine().trim());
+		
+		System.out.print("Enter y: ");
+		int y = Integer.parseInt(input.nextLine().trim());
+		
+		
+		
+	}
+
+}

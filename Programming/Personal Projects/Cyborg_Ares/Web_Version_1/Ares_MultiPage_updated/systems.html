@@ -1,0 +1,78 @@
+<!doctype html>
+<!--
+  systems.html - Part of the Ares A-1 multi-page site.
+  Comments in this file explain structure and choices for learning.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Systems — Offense, Defense, Life Support</title>
+  <!-- Tailwind CDN for quick styling; in production you'd build your own CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom color tokens for a consistent theme */
+    .bg-ares-dark { background-color: #0b1220; }
+    .bg-ares-mid  { background-color: #111827; }
+    .text-ares-light { color: #D1D5DB; }
+    .text-ares-bright { color: #E5E7EB; }
+    .accent { color: #7C3AED; }
+    /* Simple page transition utility used by the single-file version too */
+    .fade-in { animation: fadeIn 360ms ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: translateY(0) } }
+  </style>
+</head>
+<body class="bg-ares-dark text-ares-light min-h-screen leading-relaxed">
+  <div class="max-w-5xl mx-auto p-6">
+    <!-- Header -->
+    <header class="mb-6">
+      <div class="flex items-center gap-4">
+        <img src="assets/Ares_A-1.png" alt="Ares concept" class="w-16 h-16 rounded-md shadow-lg" />
+        <div>
+          <h1 class="text-2xl font-bold text-ares-bright">Project Ares A-1</h1>
+          <p class="text-sm text-gray-400">Bio-cybernetic guardian — technical readout</p>
+        </div>
+      </div>
+    </header>
+
+    
+<!-- Navigation bar: shared between pages -->
+<nav class="bg-ares-mid rounded-md p-3 flex flex-wrap gap-2 justify-center">
+  <a href="index.html" class="nav-link px-3 py-2 rounded text-sm font-medium">Home</a>
+  <a href="structure.html" class="nav-link px-3 py-2 rounded text-sm font-medium">Structure</a>
+  <a href="systems.html" class="nav-link px-3 py-2 rounded text-sm font-medium">Systems</a>
+  <a href="others.html" class="nav-link px-3 py-2 rounded text-sm font-medium">Others</a>
+  <a href="about.html" class="nav-link px-3 py-2 rounded text-sm font-medium">About</a>
+</nav>
+
+
+    <main class="mt-6 fade-in">
+
+<article class="space-y-4">
+  <section class="bg-ares-mid p-4 rounded shadow">
+    <h3 class="font-semibold text-ares-bright">Offense</h3>
+    <p class="text-sm text-gray-300 mt-2">Primary melee: Plasma Blade—miniature plasma containment emitter in a hilt. Designed for burst usage due to high instantaneous energy draw; ideal for breaching and anti-armor cutting. fileciteturn0file16</p>
+    <p class="text-xs text-gray-400 mt-2">Implementation note: optimize power routing to the BESS for instantaneous bursts and aggressive cooling during use. fileciteturn0file11</p>
+  </section>
+
+  <section class="bg-ares-mid p-4 rounded shadow">
+    <h3 class="font-semibold text-ares-bright">Defense</h3>
+    <p class="text-sm text-gray-300 mt-2">Projected Magnetic/Plasma Shield: an EM coil array paired with rapid gas-ionization to create a short-duration plasma/magnetic field to deflect projectiles and absorb lasers. Activates only when predictive sensors indicate imminent impact to preserve energy. fileciteturn0file16</p>
+  </section>
+
+  <section class="bg-ares-mid p-4 rounded shadow">
+    <h3 class="font-semibold text-ares-bright">Support / Life Support / Repair</h3>
+    <p class="text-sm text-gray-300 mt-2">Internal Repair Module (IRM) stores a swarm of Cyber-Bots (Nano-Welders) and materials (graphene paste, metallic powder, polymer resin). On damage detection, the IRM deploys a targeted swarm to perform additive 3D repairs guided by real-time structural simulation. fileciteturn0file13turn0file18</p>
+    <p class="text-xs text-gray-400 mt-2">Biological Life Support System (BLSS) maintains the preserved brain—temperature regulation, nutrient flow, and NBRP sync for backups. fileciteturn0file1</p>
+  </section>
+</article>
+
+</main>
+
+    <footer class="mt-12 text-xs text-gray-500 border-t border-gray-700 pt-4">
+      <!-- Footer notes with links to assets & source doc -->
+      Assets included in /assets (Ares image, sample figure, and Cyborg.docx for reference).
+    </footer>
+  </div>
+</body>
+</html>

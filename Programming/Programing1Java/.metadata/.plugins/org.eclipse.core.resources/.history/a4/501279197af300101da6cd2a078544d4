@@ -1,0 +1,10 @@
+package basicCalculations;
+
+public class MealProgram {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ares A-2: Technical Readout</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom dark theme */
+        .bg-ares-dark { background-color: #111827; } /* gray-900 */
+        .bg-ares-mid { background-color: #1F2937; } /* gray-800 */
+        .border-ares-light { border-color: #374151; } /* gray-700 */
+        .text-ares-light { color: #D1D5DB; } /* gray-300 */
+        .text-ares-bright { color: #E5E7EB; } /* gray-100 */
+        .text-ares-accent { color: #6366F1; } /* indigo-500 */
+        .border-ares-accent { border-color: #6366F1; }
+
+        /* Tab styles */
+        .tab-button {
+            @apply w-full md:w-auto text-left px-6 py-3 font-semibold text-lg border-b-4 border-transparent transition-colors duration-200;
+        }
+        .tab-button.active {
+            @apply border-ares-accent text-ares-bright;
+        }
+        .tab-button:not(.active) {
+            @apply text-gray-500 hover:text-ares-light;
+        }
+        .tab-content {
+            @apply hidden;
+        }
+        .tab-content.active {
+            @apply block;
+        }
+
+        /* Detail card styles */
+        .spec-card {
+            @apply bg-ares-mid border border-ares-light rounded-lg shadow-lg overflow-hidden;
+        }
+        .spec-header {
+            @apply p-5 border-b border-ares-light;
+        }
+        .spec-body {
+            @apply p-5;
+        }
+    </style>
+</head>
+<body class="bg-ares-dark text-ares-light p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-ares-bright tracking-tight">
+                CH-01 "Ares A-2"
+            </h1>
+            <p class="text-lg text-ares-light mt-2">Embodied Volition Guardian: Technical Readout</p>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="flex flex-col md:flex-row border-b border-ares-light mb-8">
+            <button class="tab-button active" data-tab="tab-1">Project Overview & Volition</button>
+            <button class="tab-button" data-tab="tab-2">Chassis & Core Systems</button>
+            <button class="tab-button" data-tab="tab-3">Tactical & Support Systems</button>
+        </nav>
+
+        <!-- Tab Content Area -->
+        <main>
+            <!-- TAB 1: Project Overview & Volition -->
+            <div id="tab-1" class="tab-content active">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- Project Overview -->
+                    <div class="spec-card">
+                        <div class="spec-header flex items-center space-x-3">
+                            <svg class="w-8 h-8 text-ares-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.276a6.992 6.992 0 00-6.104-5.618A6.992 6.992 0 004 12c0 2.651 1.488 4.908 3.738 6.136a7.001 7.001 0 008.524 0C18.512 16.908 20 14.651 20 12c0-.726-.063-1.442-.182-2.148z"></path></svg>
+                            <h2 class="text-2xl font-bold text-ares-bright">Project Ares A-2</h2>
+                        </div>
+                        <div class="spec-body">
+                            <p class="mb-4">The Ares A-2 is a 2-meter tall, 450 kg bio-cybernetic guardian. Its design fuses advanced, resilient hardware with an embodied human consciousness, creating a "super-monster" with an uncorruptible ethical core.</p>
+                            <ul class="list-disc list-inside space-y-2 text-sm">
+                                <li><strong>Mandate:</strong> The defense and preservation of the designer's family line (Paula and children).</li>
+                                <li><strong>Control:</strong> **Embodied Volition**. The designer's biological brain is the central processor, providing the "will to protect."</li>
+                                <li><strong>AI:</strong> The **Prometheus COM (AI)** acts as a **Neural Interface Bridge (NIB)**, translating human intent into sub-millisecond machine commands.</li>
+                                <li><strong>Aesthetic:</strong> Fuses high-tech materials with an organic, agile "Inuyasha/Sesshomaru" inspired form factor.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Immortality Protocol -->
+                    <div class="spec-card">
+                        <div class="spec-header flex items-center space-x-3">
+                            <svg class="w-8 h-8 text-ares-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m-15.357-2a8.001 8.001 0 0015.357 2m0 0H15"></path></svg>
+                            <h2 class="text-2xl font-bold text-ares-bright">Neural Backup & Restoration Protocol (NBRP)</h2>
+                        </div>
+                        <div class="spec-body">
+                            <p class="mb-4">The biological brain provides the ethical core but is susceptible to aging. The NBRP ensures the guardian's consciousness and mission are functionally immortal.</p>
+                            <ul class="list-disc list-inside space-y-2 text-sm">
+                                <li><strong>Phase 1: Baseline Mapping:</strong> A high-fidelity digital map of the brain's entire connectome (memories, personality, and the "will to protect") is created and stored securely.</li>
+                                <li><strong>Phase 2: Continuous Sync:</strong> The NIB constantly uploads new memories to the digital backup, ensuring the backed-up consciousness remains current.</li>
+                                <li><strong>Phase 3: Restoration Cycle:</strong> When biological degradation is detected, the aging brain is replaced with a **new, genetically pristine, cloned neural structure**.</li>
+                                <li><strong>Phase 4: Re-Implantation:</strong> The latest digital backup of the consciousness is downloaded into the fresh brain, restoring the original personality and will to a new, healthy biological processor.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- TAB 2: Chassis & Core Systems -->
+            <div id="tab-2" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Actuation -->
+                    <div class="spec-card">
+                        <div class="spec-header flex items-center space-x-3">
+                             <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <h2 class="text-2xl font-bold text-ares-bright">Actuation (Muscles)</h2>
+                        </div>
+                        <div class="spec-body">
+                            <p class="mb-4">Superhuman agility and strength are achieved via **Graphene-Enhanced Dielectric Elastomer Actuators (DEAs)**, or "Artificial Muscles."</p>
+                            <ul class="list-disc list-inside space-y-2 text-sm">
+                                <li><strong>Working Principle:</strong> DEAs are compliant capacitors that expand laterally under high voltage, mimicking muscle contraction with high speed and force.</li>
+                                <li><strong>Graphene Enhancement:</strong> Graphene nanoflakes embedded in the polymer matrix **significantly increase tensile strength and fracture toughness**, preventing tears under the 450kg chassis's extreme loads.</li>
+                                <li><strong>Tendons:</strong> Actuators are anchored via **Carbon Nanotube (CNT) Tendons** for superior strength-to-weight ratio.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Power System -->
+                    <div class="spec-card">
+                        <div class="spec-header flex items-center space-x-3">
+                            <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a8 8 0 11-14.856 0M12 10v4M12 21.5v-1.5"></path></svg>
+                            <h2 class="text-2xl font-bold text-ares-bright">Power: Bio-Energetic Spine System (BESS)</h2>
+                        </div>
+                        <div class="spec-body">
+                            <p class="mb-4">A hybrid system integrated into the chassis and articulated tail, providing distributed power, heat recycling, and stabilization.</p>
+                            <ul class="list-disc list-inside space-y-2 text-sm">
+                                <li><strong>Primary Storage (SSBs):</strong> Flexible **Solid-State Batteries (SSBs)** are layered along the spine and tail, targeting **1000 Wh/kg** density for high-burst weapons.</li>
+                                <li><strong>Endurance (Fuel Cell):</strong> A lightweight **PEM Fuel Cell** provides continuous baseline power for locomotion, sensors, and the BLSS.</li>
+                                <li><strong>Energy Recycling (TEGs):</strong> **Thermoelectric Generators (TEGs)** line the spine, capturing waste heat from the actuators and cooling system.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Cooling System -->
+                    <div class="spec-card">
+                        <div class="spec-header flex items-center space-x-3">
+                            <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-12v4m-2-2h4m5 10v4m-2-2h4M12 3v4m-2-2h4m0 7.5a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"></path></svg>
+                            <h2 class="text-2xl font-bold text-ares-bright">Cooling: Integrated Thermal (ITMS)</h2>
+                        </div>
+                        <div class="spec-body">
+                            <p class="mb-4">Essential for preventing thermal shutdown from the high-burst energy weapons (Plasma Shield/Blade) and the central SSB banks.</p>
+                            <ul class="list-disc list-inside space-y-2 text-sm">
+                                <li><strong>Stage 1 (Internal Loop):** A **Micro-channel Liquid Cooling Loop** (Dielectric Fluid) draws heat directly from the Plasma Emitters, Blade Hilt, and SSB core.</li>
+                                <li>**Stage 2 (BESS Heat Exchange):** Hot fluid is pumped through the **BESS Spine/Tail**, using its massive surface area to radiate heat after being scrubbed by the TEGs.</li>
+                                <li>**Stage 3 (Active Venting):** **Ceramic Ablative Vents (CAVs)** on the back and spine allow for emergency, high-speed heat venting.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: Tactical & Support Systems -->
+            <div id="tab-3" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    <!-- Plasma Shield -->
+                    <div class="spec-card">
+                        <div class="spec-header flex items-center space-x-3">
+                            <svg class="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.276a6.992 6.992 0 00-6.104-5.618A6.992 6.992 0 004 12c0 2.651 1.488 4.908 3.738 6.136a7.001 7.001 0 008.524 0C18.512 16.908 20 14.651 20 12c0-.726-.063-1.442-.182-2.148z"></path></svg>
+                            <h2 class="text-2xl font-bold text-ares-bright">Defense: Plasma Shield</h2>
+                        </div>
+                        <div class="spec-body">
+                            <p class="mb-4">The primary active defense, enabling sub-millisecond reflexes. Designed to deflect kinetic projectiles and directed energy weapons.</p>
+                            <ul class="list-disc list-inside space-y-2 text-sm">
+                                <li>**Working Principle:** Powerful electromagnetic coils (housed in the reinforced torso) instantly ionize a small packet of inert gas, projecting a localized, superheated **plasma field**.</li>
+                                <li>**Defense:** High-velocity projectiles are **vaporized or fragmented** on contact. Lasers are **diffused and absorbed** by the magnetic field.</li>
+                                <li>**Power Draw:** A **massive energy drain**. The NIB is optimized to activate the shield only for the necessary milliseconds to ensure survival.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Plasma Blade -->
+                    <div class="spec-card">
+                        <div class="spec-header flex items-center space-x-3">
+                            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                            <h2 class="text-2xl font-bold text-ares-bright">Weapon: Plasma Blade</h2>
+                        </div>
+                        <div class="spec-body">
+                            <p class="mb-4">The ultimate CQC weapon, designed to complement the Ares's martial arts and provide unmatched breaching and anti-armor power.</p>
+                            <ul class="list-disc list-inside space-y-2 text-sm">
+                                <li>**Working Principle:** A **Miniature Plasma Containment Field Emitter** in the hilt draws power from the BESS to ionize gas into a stable, magnetically contained blade of superheated plasma.</li>
+                                <li>**Offensive Use:** The blade can cut through conventional armor by **vaporizing material at a molecular level**.</li>
+                                <li>**Tactical Use:** The blade instantly **cauterizes** wounds, making it uniquely effective against biological threats capable of regeneration or acidic blood.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- IRM -->
+                    <div class="spec-card">
+                        <div class="spec-header flex items-center space-x-3">
+                            <svg class="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M5 11V9a2 2 0 012-2"></path></svg>
+                            <h2 class="text-2xl font-bold text-ares-bright">Support: Internal Repair Module (IRM)</h2>
+                        </div>
+                        <div class="spec-body">
+                            <p class="mb-4">An autonomous, swarm-based repair system housed within the chassis to ensure resilience and mitigate battlefield damage.</p>
+                            <ul class="list-disc list-inside space-y-2 text-sm">
+                                <li>**Core Component:** A "hive" containing thousands of **Cyber-Bots** (micro-robots) and raw repair materials (graphene paste, polymer resin).</li>
+                                <li>**Function:** When the NIB detects armor or structural damage, it dispatches the swarm to the affected area.</li>
+                                <li>**Action:** The Cyber-Bots perform localized **additive manufacturing (3D printing)** to seal breaches, reinforce damaged armor, and repair micro-fractures in the exoskeleton.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Simple JavaScript for Tab Functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.tab-button');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Deactivate all
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+
+                    // Activate clicked tab
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+package firstJavaProgams;
+
+import java.util.Scanner;
+
+public class DecimalProgram {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		Scanner input = new Scanner(System.in);
+		
+		System.out.print("Enter a decimal number: ");
+		double a = Double.parseDouble(input.nextLine().replace(',', '.'));
+		
+		System.out.print("Enter a decimal number: ");
+		double b = Double.parseDouble(input.nextLine().replace(',', '.'));
+		
+		
+		
+	}
+
+}

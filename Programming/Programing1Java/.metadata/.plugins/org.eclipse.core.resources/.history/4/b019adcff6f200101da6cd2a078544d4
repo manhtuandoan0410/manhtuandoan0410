@@ -1,0 +1,10 @@
+package firstJavaProgams;
+
+public class SalesProgram {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

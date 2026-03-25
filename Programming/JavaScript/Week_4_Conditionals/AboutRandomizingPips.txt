@@ -1,0 +1,44 @@
+﻿// basically this code works for randomizing a value from 1 to 6:
+var num = Math.random();   
+// num has now a decimal value between 0.0 and 0.999999999999999
+num = num * 6;   // value now between 0.0 and 5.999999999999994  
+num = Math.floor(num);   // whole decimal part _cut_ away => 0 to 5  (Never 6!)
+num = num + 1;   // 1 to 6
+
+// ----------------------------------------------------------------------
+
+// Then if you wan to make it generic, not between 1 and 6, but 
+// between any given number x and y, (Note: x must be smaller than y),
+// e.g. x=3 and y=4  or x=99 and y=100 or x=7 and y=11
+
+// First _FAILING_ solution: Replacing simply hard-coded 1 with x and 6 with y
+// Why/how does this code FAIL? Try with x=99 and y=100, the code
+
+var num = Math.random();   
+// num has now a decimal value between 0.0 and 0.999999999999999
+num = num * y;   // value now between 0.0 and 99.999999999999900
+num = Math.floor(num); // all decimal part _cut_ away => 0 to 99 (Not 98 to 99!)
+num = num + x;   // 0 to 99 => 99 to 198 (Not from 99 to 100 like we wanted)
+
+// Trying to find the _CORRECT_ solution: The 6 was actually the _range_, 
+// meaning there should be 6 values from 1 to 6.  (1,2,3,4,5,6 = 6 items)
+// So how would you get the range between 99 and 100? That's 2 (99,100). Range between 
+// 98 and 100 would be 3 (98,99,100). So now you should make a generic calculation
+// would work with any x and y (x still smaller than y)
+
+// Apparantly the bigger number y 100 should add more to the range. On the other hand
+// The smaller number x seems to make the range smaller. The bigger x, the fewer
+// items in the range (compare x:1 to y:100 and x:98 to y:100). 
+// => Thus y-x has to be part of the calculation. The "y-x" for 1 to 100 would be 99 
+// while range should be 100. The "y-x" for 98 to 100 would be 2 while range is 3.
+// So how about "y-x+1"? That seems to be the correct value for the range, no matter
+// what are x and y   (Provided that x is smaller than y)
+
+// Thus the code that would create a random number from x to y seems to be the
+// original, though 1 should be replace with the "x" and 6 should be replace with the
+// range "y-x+1"
+
+// In our task x was called "from" and y was called "to" 
+
+// Like this example shows many problems can be solved by drawing examples on paper
+// looking for patterns.

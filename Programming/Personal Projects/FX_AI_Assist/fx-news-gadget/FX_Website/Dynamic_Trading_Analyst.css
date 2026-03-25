@@ -1,0 +1,96 @@
+/* Global Inter Font & Custom Styling */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Navigation Button Styling */
+.nav-button {
+    padding: 0.75rem 1.25rem;
+    font-weight: 600;
+    color: #4b5563; /* gray-600 */
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+    flex-grow: 1;
+    margin: 0 4px;
+}
+
+.nav-button:hover {
+    background-color: #f3f4f6; /* gray-100 */
+}
+
+.nav-button.active {
+    background-color: #3b82f6; /* blue-500 */
+    color: white;
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+}
+
+/* Timeframe Selector Grid Layout (used in index.html) */
+.timeframe-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+    .timeframe-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.75rem;
+    }
+}
+
+/* Timeframe Button Base Style */
+.tf-button {
+    transition: all 0.2s;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    background-color: #f3f4f6; /* gray-100 */
+    color: #4b5563; /* gray-600 */
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.tf-button:hover {
+    background-color: #dbeafe; /* blue-100 */
+}
+
+/* Timeframe Button Active State */
+.tf-button.active {
+    background-color: #1e40af; /* blue-800 */
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(30, 64, 175, 0.4);
+}
+
+/* Collapsible Section for Larger Timeframes */
+.collapse-transition {
+    transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out, margin 0.4s ease-in-out;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+}
+
+.collapse-transition.open {
+    max-height: 500px; /* Sufficient height */
+    opacity: 1;
+}
+
+/* Chart Canvas Styling */
+#price-chart {
+    height: 75%; /* Allocate 75% height for the price chart */
+    width: 100%;
+    display: block;
+}
+
+#volume-chart {
+    height: 25%; /* Allocate 25% height for the volume chart */
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: block;
+}

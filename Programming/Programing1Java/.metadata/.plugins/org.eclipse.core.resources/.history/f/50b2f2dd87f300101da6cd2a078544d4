@@ -1,0 +1,15 @@
+package basicCalculations;
+
+import java.util.Scanner;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+
+public class TrainTravel {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		
+		
+	}
+
+}

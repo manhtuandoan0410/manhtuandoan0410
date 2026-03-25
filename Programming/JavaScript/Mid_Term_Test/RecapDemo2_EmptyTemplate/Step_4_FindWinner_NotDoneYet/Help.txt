@@ -1,0 +1,50 @@
+﻿Spoiler alert!!! Scroll down if wanna get help
+
++ you can assume first that nobody has the same score, thus there is
+just one winner.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+The Find Winner feature you could do either with the help of:
+
+- two variables maxScoreSoFar and winnerNameSoFar 
+OR
+- one variable maxIndexSoFar
+
+Initialize em, update em, and when do they have the correct value?
+
+
+Advanced version: What if multiple winners are allowed? You need
+to change code a bit. At least one more if needed. Probably
+another loop too.

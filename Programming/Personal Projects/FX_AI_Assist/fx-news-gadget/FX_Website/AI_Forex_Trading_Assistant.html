@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Multi-Asset Trading Analyst</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0d1117 0%, #1a1f2e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .card {
+            background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            max-width: 1200px;
+            width: 100%;
+        }
+        .pattern-box {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            border-left: 4px solid #38bdf8;
+        }
+        .news-feed {
+            background-color: #0d1117;
+            border-radius: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .news-feed::-webkit-scrollbar {
+            width: 6px;
+        }
+        .news-feed::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
+            border-radius: 3px;
+        }
+        .news-feed::-webkit-scrollbar-track {
+            background-color: #1f2937;
+        }
+        .tab-button.active {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+            border-bottom: 2px solid #38bdf8;
+        }
+        .view {
+            display: none;
+        }
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
+        }
+        .loading-spinner {
+            border: 3px solid #374151;
+            border-top: 3px solid #38bdf8;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            border: 1px solid #374151;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="trade-app" class="card p-6 md:p-8 rounded-xl text-white border border-gray-700">
+        <div class="flex items-center justify-between mb-4">
+            <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+                Live Trading Analyst
+            </h1>
+            <div id="connection-status" class="flex items-center space-x-2">
+                <div class="w-3 h-3 rounded-full bg-green-500 pulse"></div>
+                <span class="text-xs text-gray-400">Live Data</span>
+            </div>
+        </div>
+
+        <!-- API Key Setup Banner (HIDDEN as key is provided) -->
+        <div id="api-banner" class="mb-4 p-4 bg-yellow-900/30 border border-yellow-700/50 rounded-lg" style="display: none;">
+            <div class="flex items-start space-x-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+                <div class="flex-1">
+                    <p class="text-sm text-yellow-300 font-semibold mb-2">Alpha Vantage API Key Required</p>
+                    <p class="text-xs text-yellow-200 mb-3">Get your free API key at <a href="https://www.alphavantage.co/support/#api-key" target="_blank" class="underline">alphavantage.co</a> (25 calls/day free)</p>
+                    <div class="flex space-x-2">
+                        <input type="text" id="api-key-input" placeholder="Enter your Alpha Vantage API key" class="flex-1 p-2 bg-gray-800 border border-gray-700 rounded text-white text-sm">
+                        <button onclick="saveApiKey()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm font-semibold">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <div class="flex justify-around mb-6 border-b border-gray-700">
+            <button class="tab-button active flex-1 py-3 text-sm font-medium rounded-t-lg transition duration-150" onclick="switchView('main-signal-view')">
+                Signal Center
+            </button>
+            <button class="tab-button flex-1 py-3 text-sm font-medium rounded-t-lg transition duration-150" onclick="switchView('performance-dashboard-view')">
+                Dashboard
+            </button>
+            <button class="tab-button flex-1 py-3 text-sm font-medium rounded-t-lg transition duration-150" onclick="switchView('hypothetical-builder-view')">
+                R/R Builder
+            </button>
+            <button class="tab-button flex-1 py-3 text-sm font-medium rounded-t-lg transition duration-150" onclick="switchView('journal-management-view')">
+                Journal
+            </button>
+        </div>
+
+        <!-- ------------------- VIEW 1: MAIN SIGNAL CENTER ------------------- -->
+        <div id="main-signal-view" class="view" style="display: block;">
+            <p class="text-sm text-center text-gray-400 mb-4">Real-time data from Alpha Vantage (Forex) & CoinGecko (Crypto)</p>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Column 1: Chart and Price Display -->
+                <div class="lg:col-span-2">
+                    <!-- Asset Selector -->
+                    <div class="mb-4">
+                        <label for="asset-select" class="block text-sm font-medium text-gray-300 mb-2">Select Asset:</label>
+                        <select id="asset-select" onchange="changeAsset()" class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-blue-500 focus:border-blue-500">
+                            <option value="EURUSD">EUR/USD (Forex)</option>
+                            <option value="ethereum">Ethereum (ETH)</option>
+                            <option value="cardano">Cardano (ADA)</option>
+                            <option value="solana">Solana (SOL)</option>
+                            <option value="ripple">XRP (Ripple)</option>
+                            <option value="havven">Synthetix (SNX)</option>
+                        </select>
+                    </div>
+                    <!-- Current Price Display -->
+                    <div class="mb-4 p-4 bg-gradient-to-r from-gray-800 to-gray-900 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-sm font-medium text-gray-300">Current Price:</h2>
+                                <p id="current-price" class="text-4xl font-extrabold text-yellow-300">Loading...</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-gray-400">24h Change</p>
+                                <p id="price-change" class="text-2xl font-bold">--</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex justify-between text-xs text-gray-400">
+                            <span>High: <span id="price-high" class="text-green-400">--</span></span>
+                            <span>Low: <span id="price-low" class="text-red-400">--</span></span>
+                            <span>Volume: <span id="price-volume" class="text-blue-400">--</span></span>
+                        </div>
+                    </div>
+                    <!-- Chart Timeframe Selector -->
+                    <div class="flex space-x-2 mb-3">
+                        <button class="timeframe-button bg-blue-700 text-white text-xs px-3 py-1 rounded-lg" data-days="1">24H</button>
+                        <button class="timeframe-button bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1 rounded-lg" data-days="7">7D</button>
+                        <button class="timeframe-button bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1 rounded-lg" data-days="30">30D</button>
+                        <button class="timeframe-button bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1 rounded-lg" data-days="90">90D</button>
+                        <span class="flex-grow text-xs text-right text-gray-500 pt-1">Alpha Vantage & CoinGecko</span>
+                    </div>
+                    <!-- Chart Container -->
+                    <div class="relative bg-gray-900 rounded-lg p-4 border border-gray-700" style="height: 400px;">
+                        <canvas id="price-chart"></canvas>
+                        <div id="chart-loading" class="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-90 rounded-lg">
+                            <div class="text-center">
+                                <div class="loading-spinner mx-auto mb-3"></div>
+                                <p class="text-sm text-gray-400">Loading market data...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Technical Indicators -->
+                    <div class="mt-4 grid grid-cols-3 gap-3">
+                        <div class="p-3 bg-gray-800 rounded-lg text-center border border-gray-700">
+                            <p class="text-xs text-gray-400">RSI (14)</p>
+                            <p id="rsi-value" class="text-lg font-bold text-blue-400">--</p>
+                        </div>
+                        <div class="p-3 bg-gray-800 rounded-lg text-center border border-gray-700">
+                            <p class="text-xs text-gray-400">MACD</p>
+                            <p id="macd-signal" class="text-lg font-bold text-blue-400">--</p>
+                        </div>
+                        <div class="p-3 bg-gray-800 rounded-lg text-center border border-gray-700">
+                            <p class="text-xs text-gray-400">Trend</p>
+                            <p id="trend-signal" class="text-lg font-bold text-blue-400">--</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Column 2: Signal Details -->
+                <div class="lg:col-span-1">
+                    <div id="signal-container">
+                        <div class="text-center text-gray-500 py-8">
+                            <div class="loading-spinner mx-auto mb-3"></div>
+                            <p class="text-sm">Analyzing market...</p>
+                        </div>
+                    </div>
+                    <!-- Trade Notes Field -->
+                    <div class="mt-6">
+                        <label for="trade-notes" class="block text-sm font-medium text-gray-300 mb-2">Trade Notes:</label>
+                        <textarea id="trade-notes" rows="2" placeholder="e.g., 'Breakout setup', 'Support bounce'" class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    </div>
+                    <!-- Log Trade Button -->
+                    <button onclick="logCurrentTrade()" class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 px-4 rounded-lg transition duration-300 transform hover:scale-[1.02] mt-4">
+                        Log Trade to Journal
+                    </button>
+                    <!-- Close Trade Button (Visible only when a trade is "open") -->
+                    <button id="close-trade-button" onclick="showTradeClosureModal()" class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-3 px-4 rounded-lg transition duration-300 transform hover:scale-[1.02] mt-2" style="display: none;">
+                        Close Current Trade
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ------------------- VIEW 2: PERFORMANCE DASHBOARD ------------------- -->
+        <div id="performance-dashboard-view" class="view">
+            <h2 class="text-2xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">Trading Performance Dashboard</h2>
+            <p class="text-sm text-gray-400 mb-6">Metrics from closed trades in your journal.</p>
+            <div id="performance-dashboard" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="metric-card p-5 rounded-xl text-center">
+                    <p class="text-sm uppercase text-gray-400 mb-2">Total P&L (USD)</p>
+                    <p id="metric-pnl" class="text-3xl font-bold text-gray-500">$0.00</p>
+                </div>
+                <div class="metric-card p-5 rounded-xl text-center">
+                    <p class="text-sm uppercase text-gray-400 mb-2">Win Rate</p>
+                    <p id="metric-winrate" class="text-3xl font-bold text-gray-500">0%</p>
+                </div>
+                <div class="metric-card p-5 rounded-xl text-center">
+                    <p class="text-sm uppercase text-gray-400 mb-2">Avg. R-Multiple</p>
+                    <p id="metric-avgrr" class="text-3xl font-bold text-gray-500">R0.00</p>
+                </div>
+            </div>
+            <h3 class="text-xl font-semibold mt-8 mb-3 text-blue-400">Golden Rule Check</h3>
+            <div id="golden-rule-check" class="p-5 bg-gradient-to-r from-gray-800 to-gray-900 rounded-lg text-gray-300 text-sm border border-gray-700">
+                <p>Log closed trades with an R/R ratio to check your compliance with the Golden Rule (R:R $\ge 1:2$).</p>
+            </div>
+        </div>
+
+        <!-- ------------------- VIEW 3: HYPOTHETICAL TRADE BUILDER ------------------- -->
+        <div id="hypothetical-builder-view" class="view">
+            <h2 class="text-2xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">Hypothetical R/R Builder</h2>
+            <p class="text-sm text-gray-400 mb-6">Test trade ideas and calculate risk/reward ratios.</p>
+            <div class="space-y-4">
+                <div>
+                    <label for="hypo-entry" class="block text-sm font-medium text-gray-300 mb-1">Entry Price</label>
+                    <input type="number" id="hypo-entry" placeholder="1.08500" class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white" step="any" oninput="calculateHypothetical()">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="hypo-sl" class="block text-sm font-medium text-gray-300 mb-1">Stop Loss</label>
+                        <input type="number" id="hypo-sl" placeholder="1.08000" class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-red-300" step="any" oninput="calculateHypothetical()">
+                    </div>
+                    <div>
+                        <label for="hypo-tp" class="block text-sm font-medium text-gray-300 mb-1">Take Profit</label>
+                        <input type="number" id="hypo-tp" placeholder="1.09500" class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-green-300" step="any" oninput="calculateHypothetical()">
+                    </div>
+                </div>
+            </div>
+
+            <div id="hypo-results" class="mt-6 p-5 bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl border border-gray-700 space-y-3">
+                <p class="text-lg font-bold text-blue-400">Analysis Result:</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center border-b border-gray-700 pb-2">
+                        <p class="text-gray-400">Direction:</p>
+                        <p id="hypo-direction" class="font-semibold text-gray-500">--</p>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-gray-700 pb-2">
+                        <p class="text-gray-400">Risk Distance:</p>
+                        <p id="hypo-risk-dist" class="font-semibold text-red-400">--</p>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-gray-700 pb-2">
+                        <p class="text-gray-400">Reward Distance:</p>
+                        <p id="hypo-reward-dist" class="font-semibold text-green-400">--</p>
+                    </div>
+                    <div class="flex justify-between items-center pt-2">
+                        <p class="text-lg font-bold text-blue-300">R/R Ratio:</p>
+                        <p id="hypo-rr-ratio" class="text-2xl font-extrabold text-gray-500">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="hypo-risk-sizing" class="mt-6 p-4 bg-gradient-to-r from-yellow-900/50 to-yellow-800/50 rounded-lg text-sm border border-yellow-700/50">
+                <p class="font-semibold text-yellow-300 mb-2">Position Sizing (2% Risk on $10,000):</p>
+                <p id="hypo-lot-size" class="text-xl font-bold text-yellow-200">N/A</p>
+                <p class="text-xs text-yellow-400 mt-2">Note: This assumes 1 standard lot = $100,000 for Forex. Use your broker's calculator for precise lot sizing.</p>
+            </div>
+        </div>
+
+        <!-- ------------------- VIEW 4: JOURNAL MANAGEMENT ------------------- -->
+        <div id="journal-management-view" class="view">
+            <h2 class="text-2xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Trade Journal</h2>
+            <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-700">
+                <h3 class="text-xl font-semibold mb-3 text-gray-300">Trade History</h3>
+                <button onclick="exportToCsv()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition duration-300">
+                    Export to CSV
+                </button>
+            </div>
+            <div id="trade-history-list" class="space-y-3 mb-6">
+                <p class="text-gray-500 italic">Loading trade history from Firestore...</p>
+            </div>
+        </div>
+
+        <!-- Market News Feed -->
+        <div class="mt-8 pt-6 border-t border-gray-700">
+            <h2 class="text-xl font-semibold mb-3 text-red-400 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm0 14a1 1 0 110-2 1 1 0 010 2z" clip-rule="evenodd" fill-rule="evenodd" />
+                    <path fill-rule="evenodd" d="M12 2a2 2 0 012 2v12a2 2 0 01-2 2H8a2 2 0 01-2-2V4a2 2 0 012-2h4zM8 4a1 1 0 00-1 1v10a1 1 0 001 1h4a1 1 0 001-1V5a1 1 0 00-1-1H8z" clip-rule="evenodd" />
+                </svg>
+                Market Updates
+            </h2>
+            <div id="news-feed" class="news-feed p-3 text-sm text-gray-400 space-y-2">
+                <p class="text-xs text-gray-500">Monitoring market conditions...</p>
+            </div>
+        </div>
+        <p class="text-xs text-gray-600 mt-4 text-center">
+            Session ID: <span id="user-id-display">Initializing...</span>
+        </p>
+
+        <!-- Trade Closure Modal -->
+        <div id="closure-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50" style="display: none;">
+            <div class="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-700">
+                <h3 class="text-xl font-bold text-red-400 mb-4">Close Trade: <span id="modal-asset-name"></span></h3>
+                <p class="text-sm text-gray-400 mb-4">Entry: <span id="modal-entry-price" class="font-semibold text-white"></span> @ <span id="modal-entry-date" class="font-semibold text-white"></span></p>
+                <div class="space-y-4">
+                    <div>
+                        <label for="close-price" class="block text-sm font-medium text-gray-300 mb-1">Closing Price</label>
+                        <input type="number" id="close-price" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white" step="any" placeholder="Enter closing price">
+                    </div>
+                    <div>
+                        <label for="pnl-usd" class="block text-sm font-medium text-gray-300 mb-1">P&L (USD, estimate)</label>
+                        <input type="number" id="pnl-usd" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white" step="any" placeholder="Enter P&L in USD">
+                    </div>
+                    <div>
+                        <label for="rr-ratio" class="block text-sm font-medium text-gray-300 mb-1">R-Multiple (e.g., 2.5 for 1:2.5)</label>
+                        <input type="number" id="rr-ratio" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white" step="0.1" placeholder="Enter R-Multiple">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button onclick="document.getElementById('closure-modal').style.display='none'" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-sm font-semibold">Cancel</button>
+                    <button onclick="completeTradeClosure()" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-semibold">Confirm Closure</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+        import { getFirestore, doc, collection, addDoc, onSnapshot, query, updateDoc, where } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+        // setLogLevel('Debug'); // Uncomment to see Firebase logs
+
+        // Core State
+        let currentAsset = 'EURUSD';
+        let currentDays = 1;
+        let priceChart = null;
+        let marketData = null;
+        let alphaVantageKey = '9IL4GCWI4YYIA0PF'; // YOUR PROVIDED API KEY
+        let tradeHistory = []; // Local mirror of Firestore data
+        let currentTrade = null; // Currently open trade object from Firestore
+
+        // Firebase State
+        let db = null;
+        let auth = null;
+        let userId = 'initializing';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Asset Configuration
+        const ASSET_CONFIG = {
+            'EURUSD': { 
+                name: 'EUR/USD', 
+                decimals: 5, 
+                unit: 'Pips', 
+                factor: 0.0001, 
+                pipValue: 10,
+                type: 'forex',
+                apiSymbol: 'EURUSD'
+            },
+            'ethereum': { 
+                name: 'Ethereum', 
+                symbol: 'ETH',
+                decimals: 2, 
+                unit: 'Points', 
+                factor: 1, 
+                pipValue: 1,
+                type: 'crypto',
+                geckoId: 'ethereum'
+            },
+            'cardano': { 
+                name: 'Cardano', 
+                symbol: 'ADA',
+                decimals: 4, 
+                unit: 'Points', 
+                factor: 0.01, 
+                pipValue: 1,
+                type: 'crypto',
+                geckoId: 'cardano'
+            },
+            'solana': { 
+                name: 'Solana', 
+                symbol: 'SOL',
+                decimals: 2, 
+                unit: 'Points', 
+                factor: 1, 
+                pipValue: 1,
+                type: 'crypto',
+                geckoId: 'solana'
+            },
+            'ripple': { 
+                name: 'XRP', 
+                symbol: 'XRP',
+                decimals: 4, 
+                unit: 'Points', 
+                factor: 0.01, 
+                pipValue: 1,
+                type: 'crypto',
+                geckoId: 'ripple'
+            },
+            'havven': { 
+                name: 'Synthetix', 
+                symbol: 'SNX',
+                decimals: 3, 
+                unit: 'Points', 
+                factor: 0.1, 
+                pipValue: 1,
+                type: 'crypto',
+                geckoId: 'havven'
+            }
+        };
+
+        const PATTERNS = [
+            { type: 'Bullish Engulfing', sentiment: 'BUY', description: 'Strong bullish reversal pattern indicating upward momentum.' },
+            { type: 'Ascending Triangle', sentiment: 'BUY', description: 'Continuation pattern with higher lows against resistance.' },
+            { type: 'Golden Cross', sentiment: 'BUY', description: 'Moving average crossover signaling bullish trend.' },
+            { type: 'Morning Star', sentiment: 'BUY', description: 'Three-candle reversal pattern at support levels.' },
+            { type: 'Bearish Engulfing', sentiment: 'SELL', description: 'Strong bearish reversal pattern indicating downward momentum.' },
+            { type: 'Head & Shoulders', sentiment: 'SELL', description: 'Classic reversal pattern signaling trend exhaustion.' },
+            { type: 'Death Cross', sentiment: 'SELL', description: 'Moving average crossover signaling bearish trend.' },
+            { type: 'Evening Star', sentiment: 'SELL', description: 'Three-candle reversal pattern at resistance levels.' }
+        ];
+
+        // --- Utility Functions ---
+
+        /** Formats a number to a fixed decimal place, handling sign and color */
+        function formatNumber(value, decimals, suffix = '', sign = false) {
+            if (typeof value !== 'number' || isNaN(value) || !isFinite(value)) return '--';
+            const formatted = value.toFixed(decimals) + suffix;
+            if (!sign) return formatted;
+            
+            const color = value > 0 ? 'text-green-400' : value < 0 ? 'text-red-400' : 'text-gray-400';
+            const prefix = value > 0 ? '+' : '';
+            return `<span class="${color}">${prefix}${formatted}</span>`;
+        }
+
+        /** Adds a message to the news feed */
+        window.addNewsUpdate = function(message, colorClass = 'text-gray-400') {
+            const feed = document.getElementById('news-feed');
+            const newEntry = document.createElement('p');
+            newEntry.className = `text-xs ${colorClass} transition-opacity duration-500 opacity-0`;
+            newEntry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            
+            if (feed.children.length === 1 && feed.children[0].classList.contains('text-gray-500')) {
+                feed.innerHTML = '';
+            }
+            
+            feed.prepend(newEntry);
+            setTimeout(() => newEntry.classList.remove('opacity-0'), 10);
+            if (feed.children.length > 10) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+
+        /** Switches the active view */
+        window.switchView = function(viewId) {
+            document.querySelectorAll('.view').forEach(view => view.style.display = 'none');
+            document.getElementById(viewId).style.display = 'block';
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[onclick="switchView('${viewId}')"]`).classList.add('active');
+            
+            if (viewId === 'performance-dashboard-view' && db) {
+                updateDashboard();
+            }
+        }
+
+        /** Handles asset change */
+        window.changeAsset = function() {
+            currentAsset = document.getElementById('asset-select').value;
+            // Reset timeframe to 1 day for Crypto (if applicable)
+            if (ASSET_CONFIG[currentAsset].type === 'crypto') {
+                 currentDays = 1;
+                 document.querySelector('.timeframe-button[data-days="1"]').click();
+            }
+            updateChart();
+        }
+
+        // --- Firebase Firestore Setup ---
+
+        /** Initializes Firebase and sets up authentication */
+        async function initFirebase() {
+            try {
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('user-id-display').textContent = userId;
+                        addNewsUpdate(`Authenticated successfully. User ID: ${userId.substring(0, 8)}...`, 'text-green-500');
+                        setupTradeJournalListener();
+                        await updateChart(); // Start data fetching after auth
+                    } else {
+                        // Attempt to sign in
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization or auth failed:", error);
+                document.getElementById('user-id-display').textContent = 'Error';
+                addNewsUpdate('❌ Firebase/Auth failed. Journal is unavailable.', 'text-red-500');
+            }
+        }
+
+        /** Sets up real-time listener for the user's trade journal */
+        function setupTradeJournalListener() {
+            if (!db || !userId) return;
+
+            const journalPath = `/artifacts/${appId}/users/${userId}/trade_journal`;
+            const journalCollection = collection(db, journalPath);
+            const q = query(journalCollection);
+
+            onSnapshot(q, (snapshot) => {
+                tradeHistory = [];
+                currentTrade = null;
+                snapshot.forEach(doc => {
+                    const trade = { id: doc.id, ...doc.data() };
+                    if (!trade.closedPrice) {
+                        currentTrade = trade;
+                    }
+                    tradeHistory.push(trade);
+                });
+                
+                // Sort by entry time descending
+                tradeHistory.sort((a, b) => b.entryTime - a.entryTime);
+
+                updateJournalDisplay();
+                updateDashboard();
+            }, (error) => {
+                console.error("Error fetching trade history:", error);
+                addNewsUpdate('❌ Failed to fetch trade history from Firestore.', 'text-red-500');
+            });
+        }
+
+        // --- Data Fetching Logic ---
+
+        /** Fetch Alpha Vantage Data (Forex) */
+        async function fetchAlphaVantageData(symbol) {
+            try {
+                addNewsUpdate('📡 Fetching forex data from Alpha Vantage...', 'text-blue-400');
+                
+                // 1. Get current rate (fast quote)
+                const quoteUrl = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol.substring(0,3)}&to_currency=${symbol.substring(3,6)}&apikey=${alphaVantageKey}`;
+                const quoteResponse = await fetch(quoteUrl);
+                const quoteData = await quoteResponse.json();
+
+                if (quoteData['Error Message'] || quoteData['Note']) {
+                    throw new Error(quoteData['Error Message'] || 'API limit reached or invalid call.');
+                }
+                
+                const currentRate = quoteData['Realtime Currency Exchange Rate'];
+                if (!currentRate) {
+                    throw new Error('Unexpected quote response structure.');
+                }
+                
+                // 2. Get daily historical data
+                const histUrl = `https://www.alphavantage.co/query?function=FX_DAILY&from_symbol=${symbol.substring(0,3)}&to_symbol=${symbol.substring(3,6)}&apikey=${alphaVantageKey}&outputsize=compact`;
+                const histResponse = await fetch(histUrl);
+                const histData = await histResponse.json();
+                
+                if (histData['Time Series FX (Daily)']) {
+                    return {
+                        current: parseFloat(currentRate['5. Exchange Rate']),
+                        bid: parseFloat(currentRate['8. Bid Price']),
+                        ask: parseFloat(currentRate['9. Ask Price']),
+                        timeSeries: histData['Time Series FX (Daily)']
+                    };
+                }
+                
+                throw new Error('Historical data not available.');
+
+            } catch (error) {
+                console.error('Error fetching Alpha Vantage data:', error);
+                addNewsUpdate(`⚠️ Alpha Vantage API error: ${error.message || 'Using demo data.'}`, 'text-yellow-400');
+                return useDemoForexData();
+            }
+        }
+
+        /** Demo Forex Data (fallback) */
+        function useDemoForexData() {
+            addNewsUpdate('📊 Using simulated EUR/USD data for demo (API fallback)', 'text-blue-400');
+            const basePrice = 1.08500;
+            const timeSeries = {};
+            const now = Date.now();
+            
+            for (let i = 90; i >= 0; i--) {
+                const date = new Date(now - i * 24 * 60 * 60 * 1000);
+                const dateStr = date.toISOString().split('T')[0];
+                const variation = (Math.random() - 0.5) * 0.02;
+                const price = basePrice + variation * (1 - i / 100); // Slight downward trend for variety
+                
+                timeSeries[dateStr] = {
+                    '1. open': (price - 0.0005).toFixed(5),
+                    '2. high': (price + 0.001).toFixed(5),
+                    '3. low': (price - 0.001).toFixed(5),
+                    '4. close': price.toFixed(5)
+                };
+            }
+            
+            return {
+                current: basePrice,
+                bid: basePrice - 0.0002,
+                ask: basePrice + 0.0002,
+                timeSeries: timeSeries
+            };
+        }
+
+        /** Fetch CoinGecko Data (Crypto) */
+        async function fetchCoinGeckoData(coinId, days) {
+            try {
+                addNewsUpdate('📡 Fetching crypto data from CoinGecko...', 'text-blue-400');
+                const url = `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) throw new Error('Failed to fetch historical data');
+                
+                const data = await response.json();
+                
+                const currentUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true`;
+                const currentResponse = await fetch(currentUrl);
+                const currentData = await currentResponse.json();
+
+                if (!currentResponse.ok) throw new Error('Failed to fetch current price');
+                
+                return {
+                    history: data.prices,
+                    current: currentData[coinId]
+                };
+            } catch (error) {
+                console.error('Error fetching CoinGecko data:', error);
+                addNewsUpdate('❌ Failed to fetch crypto data', 'text-red-400');
+                return null;
+            }
+        }
+
+        // --- Technical Analysis Logic ---
+
+        /** Calculates simple RSI and MACD signals based on close prices */
+        function calculateTechnicalIndicators(prices) {
+            const numPrices = prices.length;
+            if (numPrices < 20) return { rsi: '--', macd: 'Insufficient Data' };
+
+            const latestPrice = prices[numPrices - 1];
+            const avg14 = prices.slice(-14).reduce((a, b) => a + b, 0) / 14;
+            const avg50 = prices.slice(-50).reduce((a, b) => a + b, 0) / 50;
+
+            // Simple RSI Approximation (based on 14-period change)
+            const changes = prices.slice(-15).map((p, i, arr) => i > 0 ? p - arr[i - 1] : 0).slice(1);
+            const gains = changes.filter(c => c > 0).reduce((a, b) => a + b, 0);
+            const losses = changes.filter(c => c < 0).reduce((a, b) => a + b, 0);
+            const avgGain = gains / 14;
+            const avgLoss = Math.abs(losses) / 14;
+            let rsi = 50;
+            if (avgLoss > 0) {
+                const rs = avgGain / avgLoss;
+                rsi = 100 - (100 / (1 + rs));
+            } else if (avgGain > 0) {
+                rsi = 100;
+            }
+
+            // Simple MACD Signal (based on 14/50 period EMAs proxy)
+            let macdSignal = 'Neutral';
+            if (avg14 > avg50) {
+                macdSignal = 'Bullish Cross';
+            } else if (avg14 < avg50) {
+                macdSignal = 'Bearish Cross';
+            }
+
+            // Simple Trend Signal (based on last price vs 50 period avg)
+            let trendSignal = 'Sideways';
+            if (latestPrice > avg50 * 1.01) {
+                trendSignal = 'UPTREND';
+            } else if (latestPrice < avg50 * 0.99) {
+                trendSignal = 'DOWNTREND';
+            }
+
+            return { rsi: rsi.toFixed(2), macd: macdSignal, trend: trendSignal };
+        }
+
+        /** Generates a trade signal based on patterns and indicators */
+        function generateSignal(indicators) {
+            const randomPattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
+            const indicatorScore = (
+                (indicators.rsi > 70 ? -1 : indicators.rsi < 30 ? 1 : 0) +
+                (indicators.macd.includes('Bullish') ? 1 : indicators.macd.includes('Bearish') ? -1 : 0) +
+                (indicators.trend.includes('UP') ? 1 : indicators.trend.includes('DOWN') ? -1 : 0)
+            );
+
+            let finalSentiment = 'NEUTRAL';
+            let rationale = 'Market indecision. Awaiting confirmation from stronger signals.';
+
+            if (indicatorScore > 1) {
+                finalSentiment = 'STRONG BUY';
+                rationale = `Strong confluence of indicators: ${indicators.macd} and overall ${indicators.trend} combine with low RSI (${indicators.rsi}) or strong momentum.`;
+            } else if (indicatorScore < -1) {
+                finalSentiment = 'STRONG SELL';
+                rationale = `Strong confluence of indicators: ${indicators.macd} and overall ${indicators.trend} combine with high RSI (${indicators.rsi}) or strong downward pressure.`;
+            } else if (indicatorScore === 1) {
+                finalSentiment = 'BUY';
+                rationale = `${randomPattern.type} detected. Technicals lean bullish. Trade with caution, awaiting trend confirmation.`;
+            } else if (indicatorScore === -1) {
+                finalSentiment = 'SELL';
+                rationale = `${randomPattern.type} detected. Technicals lean bearish. Trade with caution, awaiting trend confirmation.`;
+            } else {
+                // Use the random pattern as a minor signal if indicators are neutral
+                finalSentiment = randomPattern.sentiment === 'BUY' ? 'MILD BUY' : 'MILD SELL';
+                rationale = `${randomPattern.type} candlestick pattern identified. Market is mostly neutral, suggesting a potential minor reversal.`;
+            }
+
+            return {
+                sentiment: finalSentiment,
+                rationale: rationale,
+                pattern: randomPattern.type
+            };
+        }
+
+        // --- Chart/UI Logic ---
+
+        /** Initializes the Chart.js instance */
+        function initChart() {
+            const ctx = document.getElementById('price-chart');
+            if (!ctx) return;
+            if (priceChart) {
+                priceChart.destroy();
+            }
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Price',
+                        data: [],
+                        borderColor: '#38bdf8',
+                        backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#38bdf8',
+                            bodyColor: '#ffffff',
+                            callbacks: {
+                                label: function(context) {
+                                    const config = ASSET_CONFIG[currentAsset];
+                                    return 'Price: ' + context.parsed.y.toFixed(config.decimals);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(55, 65, 81, 0.3)' },
+                            ticks: { color: '#9ca3af', maxTicksLimit: 8 }
+                        },
+                        y: {
+                            grid: { color: 'rgba(55, 65, 81, 0.3)' },
+                            ticks: {
+                                color: '#9ca3af',
+                                callback: function(value) {
+                                    const config = ASSET_CONFIG[currentAsset];
+                                    return value.toFixed(config.decimals);
+                                }
+                            },
+                            position: 'right'
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        /** Updates the chart and metrics with new data */
+        async function updateChart() {
+            document.getElementById('chart-loading').style.display = 'flex';
+            
+            const config = ASSET_CONFIG[currentAsset];
+            let labels = [];
+            let prices = [];
+            let currentPrice = 0;
+            let priceChange = 0;
+            let high24h = 0;
+            let low24h = 0;
+            let volume24h = 0;
+
+            let indicatorPrices = [];
+            
+            if (config.type === 'forex') {
+                marketData = await fetchAlphaVantageData(config.apiSymbol);
+                
+                if (!marketData) {
+                    document.getElementById('chart-loading').style.display = 'none';
+                    return;
+                }
+                
+                const timePoints = Object.keys(marketData.timeSeries).sort((a, b) => new Date(a) - new Date(b));
+                indicatorPrices = timePoints.map(dateStr => parseFloat(marketData.timeSeries[dateStr]['4. close']));
+
+                // Chart data uses the number of days selected (daily resolution)
+                const filteredTimePoints = timePoints.slice(-currentDays);
+                
+                labels = filteredTimePoints.map(dateStr => {
+                    const date = new Date(dateStr);
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                });
+                prices = filteredTimePoints.map(dateStr => parseFloat(marketData.timeSeries[dateStr]['4. close']));
+
+                currentPrice = marketData.current;
+
+                // Calculate 24h change using the latest close vs the close from 1 period ago
+                const latestClose = indicatorPrices[indicatorPrices.length - 1];
+                const prevClose = indicatorPrices[indicatorPrices.length - 2];
+                priceChange = ((latestClose - prevClose) / prevClose) * 100;
+                high24h = prices.reduce((max, p) => Math.max(max, p), -Infinity);
+                low24h = prices.reduce((min, p) => Math.min(min, p), Infinity);
+                volume24h = 'N/A'; // Volume not available in Alpha Vantage FX Daily
+                
+            } else if (config.type === 'crypto') {
+                marketData = await fetchCoinGeckoData(config.geckoId, currentDays);
+
+                if (!marketData) {
+                    document.getElementById('chart-loading').style.display = 'none';
+                    return;
+                }
+
+                // CoinGecko provides prices as [timestamp, price] pairs.
+                indicatorPrices = marketData.history.map(p => p[1]);
+                
+                // Chart data (limit to last 100 points for a clean chart)
+                const chartPoints = marketData.history.slice(-100);
+
+                labels = chartPoints.map(p => new Date(p[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                prices = chartPoints.map(p => p[1]);
+
+                currentPrice = marketData.current.usd;
+                priceChange = marketData.current.usd_24h_change;
+                volume24h = marketData.current.usd_24h_vol;
+                
+                // Approximate 24h high/low from the fetched 24h data
+                high24h = prices.reduce((max, p) => Math.max(max, p), -Infinity);
+                low24h = prices.reduce((min, p) => Math.min(min, p), Infinity);
+            }
+
+            // Update Chart
+            priceChart.data.labels = labels;
+            priceChart.data.datasets[0].data = prices;
+            priceChart.update();
+            
+            // Update UI Metrics
+            document.getElementById('current-price').textContent = currentPrice.toFixed(config.decimals);
+            document.getElementById('price-change').innerHTML = formatNumber(priceChange, 2, '%', true);
+            document.getElementById('price-high').textContent = high24h.toFixed(config.decimals);
+            document.getElementById('price-low').textContent = low24h.toFixed(config.decimals);
+            document.getElementById('price-volume').textContent = volume24h !== 'N/A' ? `$${formatNumber(volume24h, 0)}` : 'N/A';
+
+            // Calculate & Display Indicators
+            const indicators = calculateTechnicalIndicators(indicatorPrices);
+            document.getElementById('rsi-value').textContent = indicators.rsi;
+            document.getElementById('macd-signal').textContent = indicators.macd;
+            document.getElementById('trend-signal').textContent = indicators.trend;
+
+            // Generate & Display Signal
+            const signal = generateSignal(indicators);
+            updateSignalDisplay(signal);
+
+            // Update currentTrade for logging (even if null)
+            currentTrade = currentTrade || {};
+            currentTrade.asset = currentAsset;
+            currentTrade.assetName = config.name;
+            currentTrade.currentPrice = currentPrice;
+            currentTrade.signal = signal;
+            
+            // Check for open trade
+            document.getElementById('close-trade-button').style.display = tradeHistory.some(t => !t.closedPrice) ? 'block' : 'none';
+
+            document.getElementById('chart-loading').style.display = 'none';
+        }
+
+        /** Updates the Signal Center display */
+        function updateSignalDisplay(signal) {
+            let color = 'text-gray-400';
+            if (signal.sentiment.includes('BUY')) {
+                color = 'text-green-400';
+            } else if (signal.sentiment.includes('SELL')) {
+                color = 'text-red-400';
+            }
+
+            const html = `
+                <div class="p-5 bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl border border-gray-700">
+                    <p class="text-sm uppercase text-gray-400">Primary Signal</p>
+                    <p class="text-3xl font-extrabold ${color} mb-4">${signal.sentiment}</p>
+                    <div class="pattern-box p-3 rounded-r-lg mb-4">
+                        <p class="text-xs text-gray-400">Key Pattern</p>
+                        <p class="font-semibold text-blue-300">${signal.pattern}</p>
+                    </div>
+                    <p class="text-sm text-gray-300">${signal.rationale}</p>
+                </div>
+            `;
+            document.getElementById('signal-container').innerHTML = html;
+        }
+        
+        /** Handles Timeframe button clicks */
+        document.querySelectorAll('.timeframe-button').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.timeframe-button').forEach(btn => {
+                    btn.classList.remove('bg-blue-700', 'hover:bg-gray-600');
+                    btn.classList.add('bg-gray-700', 'hover:bg-gray-600');
+                });
+                this.classList.add('bg-blue-700');
+                this.classList.remove('bg-gray-700');
+                currentDays = parseInt(this.getAttribute('data-days'));
+                updateChart();
+            });
+        });
+
+        // --- Trade Journal Logic (Firestore) ---
+
+        /** Logs the current trade to the journal */
+        window.logCurrentTrade = async function() {
+            if (!db || !userId) {
+                return addNewsUpdate('❌ Journal not ready. Check Firebase connection.', 'text-red-500');
+            }
+            if (tradeHistory.some(t => !t.closedPrice)) {
+                return addNewsUpdate('⚠️ Please close the currently open trade before logging a new one.', 'text-yellow-500');
+            }
+
+            const entryTime = Date.now();
+            const tradeData = {
+                asset: currentAsset,
+                assetName: ASSET_CONFIG[currentAsset].name,
+                entryPrice: currentTrade.currentPrice,
+                entryTime: entryTime,
+                signal: currentTrade.signal.sentiment,
+                notes: document.getElementById('trade-notes').value.trim(),
+                isDemo: alphaVantageKey === 'YOUR_API_KEY_HERE',
+                closedPrice: null, // Open trade
+                pnlUSD: null,
+                rRatio: null,
+            };
+
+            try {
+                const journalPath = `/artifacts/${appId}/users/${userId}/trade_journal`;
+                await addDoc(collection(db, journalPath), tradeData);
+                document.getElementById('trade-notes').value = '';
+                addNewsUpdate(`✅ Trade in ${currentAsset} logged successfully at ${tradeData.entryPrice.toFixed(ASSET_CONFIG[currentAsset].decimals)}.`, 'text-green-500');
+            } catch (error) {
+                console.error("Error logging trade:", error);
+                addNewsUpdate('❌ Failed to log trade to journal.', 'text-red-500');
+            }
+        }
+
+        /** Shows the trade closure modal */
+        window.showTradeClosureModal = function() {
+            if (!currentTrade || currentTrade.closedPrice) return;
+
+            document.getElementById('modal-asset-name').textContent = currentTrade.assetName;
+            document.getElementById('modal-entry-price').textContent = currentTrade.entryPrice.toFixed(ASSET_CONFIG[currentTrade.asset].decimals);
+            document.getElementById('modal-entry-date').textContent = new Date(currentTrade.entryTime).toLocaleDateString();
+            
+            // Set current price as default close price
+            document.getElementById('close-price').value = currentTrade.currentPrice.toFixed(ASSET_CONFIG[currentTrade.asset].decimals);
+            
+            document.getElementById('closure-modal').style.display = 'flex';
+        }
+
+        /** Completes the trade closure and updates Firestore */
+        window.completeTradeClosure = async function() {
+            if (!currentTrade || currentTrade.closedPrice) return;
+
+            const closePrice = parseFloat(document.getElementById('close-price').value);
+            const pnlUSD = parseFloat(document.getElementById('pnl-usd').value);
+            const rRatio = parseFloat(document.getElementById('rr-ratio').value);
+            const exitTime = Date.now();
+
+            if (isNaN(closePrice) || isNaN(pnlUSD) || isNaN(rRatio)) {
+                return addNewsUpdate('⚠️ Please enter valid numbers for closing price, P&L (USD), and R-Multiple.', 'text-yellow-500');
+            }
+
+            try {
+                const tradeRef = doc(db, `/artifacts/${appId}/users/${userId}/trade_journal`, currentTrade.id);
+                await updateDoc(tradeRef, {
+                    closedPrice: closePrice,
+                    exitTime: exitTime,
+                    pnlUSD: pnlUSD,
+                    rRatio: rRatio,
+                });
+                document.getElementById('closure-modal').style.display = 'none';
+                addNewsUpdate(`✅ Trade closed successfully. P&L: $${pnlUSD.toFixed(2)} | R: ${rRatio.toFixed(2)}`, 'text-green-500');
+            } catch (error) {
+                console.error("Error closing trade:", error);
+                addNewsUpdate('❌ Failed to close trade in journal.', 'text-red-500');
+            }
+        }
+
+        /** Renders the trade history list */
+        function updateJournalDisplay() {
+            const list = document.getElementById('trade-history-list');
+            list.innerHTML = '';
+
+            if (tradeHistory.length === 0) {
+                list.innerHTML = '<p class="text-gray-500 italic">No trades logged yet...</p>';
+                return;
+            }
+
+            tradeHistory.forEach(trade => {
+                const isClosed = !!trade.closedPrice;
+                const statusColor = isClosed ? (trade.pnlUSD > 0 ? 'bg-green-800/30 border-green-700/50' : 'bg-red-800/30 border-red-700/50') : 'bg-blue-800/30 border-blue-700/50';
+                const statusText = isClosed ? (trade.pnlUSD > 0 ? `WIN / $${trade.pnlUSD.toFixed(2)}` : `LOSS / $${trade.pnlUSD.toFixed(2)}`) : 'OPEN';
+                const rrText = isClosed ? `R${trade.rRatio.toFixed(2)}` : '--';
+
+                const tradeElement = document.createElement('div');
+                tradeElement.className = `p-3 rounded-lg border text-sm ${statusColor}`;
+                tradeElement.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold text-white">${trade.assetName} (${trade.signal})</span>
+                        <span class="font-bold text-lg">${statusText}</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>Entry: ${trade.entryPrice.toFixed(ASSET_CONFIG[trade.asset].decimals)} (${new Date(trade.entryTime).toLocaleDateString()})</span>
+                        <span>R/R: <span class="${trade.rRatio >= 2 ? 'text-yellow-300' : 'text-gray-400'}">${rrText}</span></span>
+                    </div>
+                    ${trade.notes ? `<p class="text-xs text-gray-500 mt-1 italic">Notes: ${trade.notes}</p>` : ''}
+                `;
+                list.appendChild(tradeElement);
+            });
+        }
+
+        /** Calculates and displays performance metrics */
+        function updateDashboard() {
+            const closedTrades = tradeHistory.filter(t => t.closedPrice !== null);
+            let totalPnl = 0;
+            let wins = 0;
+            let totalRR = 0;
+
+            closedTrades.forEach(trade => {
+                totalPnl += trade.pnlUSD || 0;
+                totalRR += trade.rRatio || 0;
+                if (trade.pnlUSD > 0) {
+                    wins++;
+                }
+            });
+
+            const winRate = closedTrades.length > 0 ? (wins / closedTrades.length) * 100 : 0;
+            const avgRR = closedTrades.length > 0 ? totalRR / closedTrades.length : 0;
+
+            document.getElementById('metric-pnl').innerHTML = formatNumber(totalPnl, 2, '', true);
+            document.getElementById('metric-winrate').textContent = winRate.toFixed(1) + '%';
+            document.getElementById('metric-avgrr').textContent = `R${avgRR.toFixed(2)}`;
+
+            // Golden Rule Check
+            const ruleCheck = document.getElementById('golden-rule-check');
+            if (closedTrades.length < 5) {
+                ruleCheck.innerHTML = '<p class="text-sm text-gray-400">Log at least 5 closed trades to evaluate your performance against the Golden Rule (R:R $\ge 1:2$).</p>';
+            } else if (avgRR >= 2) {
+                ruleCheck.innerHTML = `<p class="font-bold text-green-400">Compliance Check: PASS!</p><p class="mt-2">Your Average R-Multiple of R${avgRR.toFixed(2)} meets the Golden Rule standard (R:R $\ge 1:2$). Keep up the strong risk management!</p>`;
+            } else {
+                ruleCheck.innerHTML = `<p class="font-bold text-red-400">Compliance Check: WARNING!</p><p class="mt-2">Your Average R-Multiple of R${avgRR.toFixed(2)} is below the Golden Rule target (R:R $\ge 1:2$). Re-evaluate your Stop Loss and Take Profit strategy.</p>`;
+            }
+        }
+
+        /** R/R Builder Logic */
+        window.calculateHypothetical = function() {
+            const entry = parseFloat(document.getElementById('hypo-entry').value);
+            const sl = parseFloat(document.getElementById('hypo-sl').value);
+            const tp = parseFloat(document.getElementById('hypo-tp').value);
+            const config = ASSET_CONFIG[currentAsset];
+
+            if (isNaN(entry) || isNaN(sl) || isNaN(tp)) {
+                document.getElementById('hypo-direction').textContent = '--';
+                document.getElementById('hypo-rr-ratio').textContent = '--';
+                document.getElementById('hypo-lot-size').textContent = 'N/A';
+                return;
+            }
+
+            const isLong = tp > entry && entry > sl;
+            const isShort = tp < entry && entry < sl;
+
+            let riskDist = 0;
+            let rewardDist = 0;
+            let direction = 'Invalid Setup';
+
+            if (isLong) {
+                riskDist = Math.abs(entry - sl);
+                rewardDist = Math.abs(tp - entry);
+                direction = 'LONG (BUY)';
+                document.getElementById('hypo-direction').classList.remove('text-red-400', 'text-gray-500');
+                document.getElementById('hypo-direction').classList.add('text-green-400');
+            } else if (isShort) {
+                riskDist = Math.abs(sl - entry);
+                rewardDist = Math.abs(entry - tp);
+                direction = 'SHORT (SELL)';
+                document.getElementById('hypo-direction').classList.remove('text-green-400', 'text-gray-500');
+                document.getElementById('hypo-direction').classList.add('text-red-400');
+            } else {
+                document.getElementById('hypo-direction').classList.add('text-gray-500');
+            }
+
+            const rrRatio = riskDist > 0 ? (rewardDist / riskDist) : 0;
+
+            // Display results
+            document.getElementById('hypo-direction').textContent = direction;
+            document.getElementById('hypo-risk-dist').textContent = `${(riskDist / config.factor).toFixed(1)} ${config.unit}`;
+            document.getElementById('hypo-reward-dist').textContent = `${(rewardDist / config.factor).toFixed(1)} ${config.unit}`;
+            
+            const rrColor = rrRatio >= 2 ? 'text-green-400' : rrRatio >= 1 ? 'text-yellow-400' : 'text-red-400';
+            document.getElementById('hypo-rr-ratio').innerHTML = `<span class="${rrColor}">1:${rrRatio.toFixed(2)}</span>`;
+
+            // Position Sizing (Example: 2% risk on $10,000 account)
+            const riskAmountUSD = 10000 * 0.02; // $200
+            // Pip value (USD) * Risk Pips * Lot Size Multiplier = Risk Amount USD
+            // Lot Size Multiplier = Risk Amount USD / (Risk Pips * Pip Value USD)
+            
+            // Risk in pips/points
+            const riskPoints = riskDist / config.factor;
+            let lotSize = 'N/A';
+            
+            if (config.type === 'forex' && riskPoints > 0) {
+                // Assuming $10 per pip for a standard lot (100,000 units) for EURUSD
+                const standardLotSize = 100000;
+                // Risk per 0.01 lot (micro-lot) = (Risk Pips / 10000) * 1000 * PipValue * 0.01 (Simplified for micro-lots)
+                
+                // Risk (USD) per 1 Standard Lot = Risk Pips * Pip Value
+                const riskPerStandardLot = riskPoints * config.pipValue; // 10 USD per pip for EURUSD
+                
+                // Required Lot Size (in standard lots) = Risk Amount USD / Risk (USD) per 1 Standard Lot
+                lotSize = (riskAmountUSD / riskPerStandardLot).toFixed(2) + ' Standard Lots';
+                
+            } else if (config.type === 'crypto' && riskPoints > 0) {
+                // For crypto, it's easier to calculate the amount of crypto units
+                // Amount of Asset = Risk Amount USD / (Risk Price Distance)
+                const cryptoAmount = riskAmountUSD / riskDist;
+                lotSize = `${cryptoAmount.toFixed(4)} ${config.symbol} Units`;
+            }
+            
+            document.getElementById('hypo-lot-size').textContent = lotSize;
+        }
+
+        /** Exports the trade history to a CSV file */
+        window.exportToCsv = function() {
+            if (tradeHistory.length === 0) {
+                return addNewsUpdate('⚠️ No trades to export.', 'text-yellow-500');
+            }
+
+            const header = ["ID", "Asset", "Entry Price", "Exit Price", "Entry Time", "Exit Time", "Signal", "R_Ratio", "P_L_USD", "Notes", "Is_Demo"];
+            const csv = tradeHistory.map(trade => [
+                trade.id,
+                trade.assetName,
+                trade.entryPrice,
+                trade.closedPrice || 'OPEN',
+                new Date(trade.entryTime).toISOString(),
+                trade.exitTime ? new Date(trade.exitTime).toISOString() : '',
+                trade.signal,
+                trade.rRatio || 'N/A',
+                trade.pnlUSD || 'N/A',
+                trade.notes.replace(/,/g, ';').replace(/\n/g, ' '),
+                trade.isDemo ? 'Yes' : 'No'
+            ].map(String).map(s => `"${s}"`).join(','));
+
+            const csvContent = [header.join(','), ...csv].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `trade_journal_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            addNewsUpdate('✅ Trade history exported to CSV.', 'text-green-500');
+        }
+
+        // --- Initialization ---
+
+        window.onload = function() {
+            initChart();
+            initFirebase(); // Starts auth and calls updateChart() on success
+            
+            // Set initial timeframe button active state
+            document.querySelector('.timeframe-button[data-days="1"]').classList.add('bg-blue-700');
+            document.querySelector('.timeframe-button[data-days="1"]').classList.remove('bg-gray-700');
+
+            // Hide the API banner since the key is provided in the code
+            document.getElementById('api-banner').style.display = 'none';
+        }
+
+    </script>
+</body>
+</html>
